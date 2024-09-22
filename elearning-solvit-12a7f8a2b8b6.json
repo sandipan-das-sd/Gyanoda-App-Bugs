@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "elearning-solvit",
+  "private_key_id": "12a7f8a2b8b60e460c2a8b6c4b109a8c08d9ebc5",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCHE+p7BG69k5VF\nDmMf8Re61mN3C61kqWb45FLCLrgf/oz4SmGRrFvRQrvewNCXUur6aoGYBGi8xPNS\nxZSStxV7xvy5fgZBz3YobNmpUSQMr/lPcTFCkgCuh3wYA5+i/1ltu6x4e2r/S19G\nHT3ziJ0u1D+nMe+9BxbZWWBenpYaJdWbgQ7mKYtiGR3eOgcPoC+jsAMEu7YfUyxH\nXfOJhOutalxv9vXTkfSVRMbKaj/ppEG3u1D3AAsPvW5PnB8CmkWSiNs2GwLmflOM\nJbuEzyq5Td0/jWNyECwm+fSVZfu6sEdD6muzeW59PxSsiDUeJyS36EtUJLAHd8Tr\nqFRIeCIlAgMBAAECggEACYvDROlVyCj/Yg93uuCnbClNgzK8kMIWCF3eaWGy2nP7\nU2qyRYC4RmwgacgXlbIi8AqJ2QvquPh0N7PF4a51orc30gYRfCIkuAulQD1/PjRL\neq1FrW4zBSKHBw1ugS7pi4M5V5RlReB2PbbAU48iiJYwX2j8h8/R8g9Ka7VqZzOO\nAdoZudIS/f0jo9knJ9A25ZrNQ9B0G6+p5h+KJu/GVKKeaDb/6UoUDBegRsMXsNtr\nO2L9ELNrr3YNsjbI58vl0m9IhNCwzaw+KPbdII8wmnUZYxUwOnD1olahTWt+WjBS\n4A/Q5XNwI9JqlWR2Bcsoi2EewEEGIq8oit64e3ek0QKBgQC6sEx/txfv7JMU0AG/\nYXLxXW4XNoiDFEviqZvTcbVqx2eqRwYg5glZ6NUm3kRWJk9NDkzo5JBFwRO3fUD+\n4isoLbrskl8nGSTXnDts4azVJ7Qj7QG8E/E0kbgy1RWGNKEPmxjXZzNfqK7VhUvE\nNKKT4daoo/tCUdfY8U/ryyu/nQKBgQC5OkvFG5F3MjFnfcYHdEjlZ4Vx8sBfZHlP\n/AfruPcJfBTSx9R/PNoWLFRo4EWBMCHLhXasL7RtSl20Q6sEWOEcNvL31lNGNiVX\nuLIPqDq6hJmYJe99DGqFpcTixkR6LyjVTmhzem+znUlkHUG5cd4zcwJmgIdC/8IR\ngdWOUFqaKQKBgD9jFNZYaHxCKz5p0e4VPF3Ph03Cal93SLzRMeN9PEfhJMWgD+ij\nspEgiR8FYNaPc2WKcXqyAHpusC8hDCx+xoCB5nHk0QIJe4TpuxOhHHnTXUrFck1V\nyBQ9VfmMeB51SCpwUuLwW3UjZRmChNM9u+XSTHw+EVXXTB6Q8L3y4gvRAoGABh8t\nHeiZWC0qgNchUmG/fwV63Zc+UGjLsZ8My/ejAoc9UPIVzda/BniUmZq/8VMb6tQQ\nZgR1nB8XFbwezNf7KKmQQiytN+bWOR37lJTkzAFR6jtmvOVKJ/ygkzYmUTt5yAL9\nZMOpKXCLWmm1IGHpDB5C+AxLbCVzzoxR+JAjTnECgYAh/t5kVFloIjWdqsGxMPV7\nTX5m1hy5eQPvAnirFc03HVH9xnysOGl2OdIGbDaLXxOaRhywl8wfbjkqkcoZdqPp\nLFHJzLHFzh0RIn21y0K4/Lx5l+BO5d5hiCs4r1u0AZI6QUyAkMepxbWtKqe2nBPu\n1Ok4Xu/v+WvGJe+NMtKPSg==\n-----END PRIVATE KEY-----\n",
+  "client_email": "gyanoda-app@elearning-solvit.iam.gserviceaccount.com",
+  "client_id": "108670682891934186533",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/gyanoda-app%40elearning-solvit.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
