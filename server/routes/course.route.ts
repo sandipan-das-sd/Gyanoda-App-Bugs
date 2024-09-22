@@ -168,7 +168,8 @@ courseRouter.put(
 
 courseRouter.get("/get-course/:id", getSingleCourse);
 
-courseRouter.get("/get-courses", isAutheticated, getAllCourses);
+// courseRouter.get("/get-courses", isAutheticated, getAllCourses);
+courseRouter.get("/get-courses", getAllCourses);
 //get all courses of home scrren 
 
 // courseRouter.get("/get-courses", getMinimalCourses);
