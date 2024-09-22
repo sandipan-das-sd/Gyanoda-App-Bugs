@@ -22,8 +22,7 @@ import { Toast } from "react-native-toast-notifications";
 import { AntDesign } from "@expo/vector-icons";
 import axios from "axios";
 import useUser from "@/hooks/auth/useUser";
-import { redis } from "@/utils/redis";
-import { Redis } from "ioredis";
+
 interface Course {
   _id: string;
   name: string;
@@ -656,17 +655,9 @@ const CourseAccess: React.FC = () => {
   const CACHE_EXPIRATION = 3600; // 1 hour in seconds
   const VIMEO_ACCESS_TOKEN = "3bf28d224161d1f6aa19abe18b9aa16d";
   
-  const fetchVimeoVideoUrl = async (vimeoVideoId: string, redis: Redis) => {
+  const fetchVimeoVideoUrl = async (vimeoVideoId: string) => {
     try {
-      const cacheKey = `vimeo:${vimeoVideoId}`;
-  
-      // Try to get cached data
-      let cachedData = await redis.get(cacheKey);
-  
-      if (cachedData) {
-        return JSON.parse(cachedData);
-      }
-  
+    
       const videoId = vimeoVideoId.split("/").pop();
       if (!videoId || !/^\d+$/.test(videoId)) {
         throw new Error("Invalid Vimeo video ID.");
@@ -703,7 +694,7 @@ const CourseAccess: React.FC = () => {
       };
   
       // Cache the result
-      await redis.set(cacheKey, JSON.stringify(result), "EX", CACHE_EXPIRATION);
+     
   
       return result;
     } catch (error) {
@@ -715,7 +706,7 @@ const CourseAccess: React.FC = () => {
   const handleOpenModal = async (vimeoVideoId: string) => {
     setLoadingVideoId(vimeoVideoId); // Set the loading state for this video
     try {
-      const url = await fetchVimeoVideoUrl(vimeoVideoId,redis);
+      const url = await fetchVimeoVideoUrl(vimeoVideoId);
       if (url) {
         setVideoLink(url.defaultQuality);
         setVideoQualities(url.qualities);
