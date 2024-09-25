@@ -4,6 +4,7 @@
 node_modules/
 
 # Expo
+Store.txt
 .expo/
 dist/
 web-build/
