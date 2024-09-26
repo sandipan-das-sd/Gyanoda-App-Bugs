@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -32,13 +32,17 @@ import {
   Nunito_600SemiBold,
 } from "@expo-google-fonts/nunito";
 import { router } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { SERVER_URI } from "@/utils/uri";
 import { Toast } from "react-native-toast-notifications";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { commonStyles } from "@/styles/common/common.styles";
 import * as Location from "expo-location";
+import * as WebBrowser from "expo-web-browser";
+import * as Google from "expo-auth-session/providers/google";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function SignUpScreen() {
   const [isPasswordVisible, setPasswordVisible] = useState(false);
@@ -50,6 +54,7 @@ export default function SignUpScreen() {
     phone: "+91",
     location: "",
   });
+  const [userDetails, setUserDetails] = useState(null);
   const [required, setRequired] = useState("");
   const [error, setError] = useState({
     password: "",
@@ -58,7 +63,7 @@ export default function SignUpScreen() {
   const [isTermsChecked, setTermsChecked] = useState(false);
   const [locationInputValue, setLocationInputValue] = useState("");
 
-  let [fontsLoaded, fontError] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Raleway_600SemiBold,
     Raleway_700Bold,
     Nunito_400Regular,
@@ -67,65 +72,70 @@ export default function SignUpScreen() {
     Nunito_600SemiBold,
   });
 
-  if (!fontsLoaded && !fontError) {
-    return null;
-  }
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    webClientId:
+      "1035545013004-p0tlf28nbm8847ivn29dr1r6cio30r7n.apps.googleusercontent.com",
+    androidClientId:
+      "1035545013004-etpoa0p6t8be3uflcolq1g7jjd84fuo4.apps.googleusercontent.com",
+    iosClientId:
+      "1035545013004-m8vqnen4o8ts8b3tnevke5bhkesclm9l.apps.googleusercontent.com",
+  });
 
-  const handlePasswordValidation = (value: string) => {
+  const handlePasswordValidation = useCallback((value: string) => {
     const password = value;
     const passwordSpecialCharacter = /(?=.*[!@#$&*])/;
     const passwordOneNumber = /(?=.*[0-9])/;
     const passwordSixValue = /(?=.{6,})/;
 
     if (!passwordSpecialCharacter.test(password)) {
-      setError({
-        ...error,
+      setError((prev) => ({
+        ...prev,
         password: "Write at least one special character",
-      });
-      setUserInfo({ ...userInfo, password: "" });
+      }));
+      setUserInfo((prev) => ({ ...prev, password: "" }));
     } else if (!passwordOneNumber.test(password)) {
-      setError({
-        ...error,
+      setError((prev) => ({
+        ...prev,
         password: "Write at least one number",
-      });
-      setUserInfo({ ...userInfo, password: "" });
+      }));
+      setUserInfo((prev) => ({ ...prev, password: "" }));
     } else if (!passwordSixValue.test(password)) {
-      setError({
-        ...error,
+      setError((prev) => ({
+        ...prev,
         password: "Write at least 6 characters",
-      });
-      setUserInfo({ ...userInfo, password: "" });
+      }));
+      setUserInfo((prev) => ({ ...prev, password: "" }));
     } else {
-      setError({
-        ...error,
+      setError((prev) => ({
+        ...prev,
         password: "",
-      });
-      setUserInfo({ ...userInfo, password: value });
+      }));
+      setUserInfo((prev) => ({ ...prev, password: value }));
     }
-  };
+  }, []);
 
-  const handleSignIn = async () => {
+  const handleSignIn = useCallback(async () => {
     const { name, email, password, phone } = userInfo;
     let valid = true;
 
     if (!name) {
-      setError((prevError) => ({ ...prevError, name: "Name is required" }));
+      setError((prev) => ({ ...prev, name: "Name is required" }));
       valid = false;
     }
     if (!email) {
-      setError((prevError) => ({ ...prevError, email: "Email is required" }));
+      setError((prev) => ({ ...prev, email: "Email is required" }));
       valid = false;
     }
     if (!password) {
-      setError((prevError) => ({
-        ...prevError,
+      setError((prev) => ({
+        ...prev,
         password: "Password is required",
       }));
       valid = false;
     }
     if (!phone || phone === "+91") {
-      setError((prevError) => ({
-        ...prevError,
+      setError((prev) => ({
+        ...prev,
         phone: "Phone number is required",
       }));
       valid = false;
@@ -145,65 +155,61 @@ export default function SignUpScreen() {
       return;
     }
     setButtonSpinner(true);
-    await axios
-      .post(`${SERVER_URI}/registration`, {
+    try {
+      const res = await axios.post(`${SERVER_URI}/registration`, {
         name: userInfo.name,
         email: userInfo.email,
         password: userInfo.password,
         phone: userInfo.phone,
         location: userInfo.location,
-      })
-      .then(async (res) => {
-        await AsyncStorage.setItem(
-          "activation_token",
-          res.data.activationToken
-        );
-        await AsyncStorage.setItem("user_email", userInfo.email);
-        await AsyncStorage.setItem("user_info", JSON.stringify(userInfo));
-        Toast.show(res.data.message, {
-          type: "success",
-        });
-        setUserInfo({
-          name: "",
-          email: "",
-          password: "",
-          phone: "+91",
-          location: "",
-        });
-        setButtonSpinner(false);
-        router.push("/(routes)/verifyAccount");
-      })
-      .catch((error) => {
-        setButtonSpinner(false);
-        const errorMessage = error.response?.data?.message || "An error occurred during registration. Please try again.";
-        Toast.show(errorMessage, {
-          type: "danger",
-        });
       });
-  };
-
-  const handlePhoneNumberChange = (value: string) => {
-    setUserInfo({ ...userInfo, phone: value });
-  };
-
-  const handlePhoneNumberValidation = () => {
-    const phoneNumber = userInfo.phone.replace(/^\+?91/, ""); // Remove +91 or 91 prefix if present
-    if (phoneNumber.length !== 10) {
-      setError({
-        ...error,
-        phone: "Phone number must be 10 digits",
+      await AsyncStorage.setItem("activation_token", res.data.activationToken);
+      await AsyncStorage.setItem("user_email", userInfo.email);
+      await AsyncStorage.setItem("user_info", JSON.stringify(userInfo));
+      Toast.show(res.data.message, {
+        type: "success",
       });
-      setUserInfo({ ...userInfo, phone: "" });
-    } else {
-      setError({
-        ...error,
-        phone: "",
+      setUserInfo({
+        name: "",
+        email: "",
+        password: "",
+        phone: "+91",
+        location: "",
       });
-      setUserInfo({ ...userInfo, phone: `+91${phoneNumber}` }); // Store with +91 prefix
+      router.push("/(routes)/verifyAccount");
+    } catch (error) {
+      setButtonSpinner(false);
+      // const errorMessage = error.response?.data?.message || "An error occurred during registration. Please try again.";
+      Toast.show("An error occurred during registration. Please try again.", {
+        type: "danger",
+      });
+    } finally {
+      setButtonSpinner(false);
     }
-  };
+  }, [userInfo, isTermsChecked]);
 
-  const handleAutoCompleteLocation = async () => {
+  const handlePhoneNumberChange = useCallback((value: string) => {
+    setUserInfo((prev) => ({ ...prev, phone: value }));
+  }, []);
+
+  const handlePhoneNumberValidation = useCallback(() => {
+    const phoneNumber = userInfo.phone.replace(/^\+?91/, "");
+    if (phoneNumber.length !== 10) {
+      setError((prev) => ({
+        ...prev,
+        phone: "Phone number must be 10 digits",
+      }));
+      setUserInfo((prev) => ({ ...prev, phone: "" }));
+    } else {
+      setError((prev) => ({
+        ...prev,
+        phone: "",
+      }));
+      setUserInfo((prev) => ({ ...prev, phone: `+91${phoneNumber}` }));
+    }
+  }, [userInfo.phone]);
+
+  const handleAutoCompleteLocation = useCallback(async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
       Toast.show("Permission to access location was denied", { type: "error" });
@@ -221,235 +227,291 @@ export default function SignUpScreen() {
       if (response.data.results.length > 0) {
         const address = response.data.results[0].formatted_address;
         setLocationInputValue(address);
-        setUserInfo({ ...userInfo, location: address });
+        setUserInfo((prev) => ({ ...prev, location: address }));
       }
     } catch (error) {
       Toast.show("Error fetching location", { type: "error" });
     }
-  };
+  }, []);
+
+  const getUserInfo = useCallback(async (token: string) => {
+    if (!token) return;
+    const url = "https://www.googleapis.com/userinfo/v2/me";
+    try {
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const user = await response.json();
+      await AsyncStorage.setItem("@user", JSON.stringify(user));
+      setUserDetails(user);
+      await sendUserDataToServer(user);
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+    }
+  }, []);
+
+  const sendUserDataToServer = useCallback(async (userData: any) => {
+    try {
+      const response = await axios.post(`${SERVER_URI}/google-signin`, userData);
+      console.log("Server response:", response.data);
+      
+      if (response.data.accessToken) {
+        await AsyncStorage.setItem("access_token", response.data.accessToken);
+      }
+      if (response.data.refreshToken) {
+        await AsyncStorage.setItem("refresh_token", response.data.refreshToken);
+      }
+
+      Toast.show("Google sign-in successful", { type: "success" });
+    } catch (error) {
+      console.error("Error sending user data to server:", error);
+      Toast.show("Error occurred during Google sign-in", { type: "danger" });
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleSigninGoogle = async () => {
+      if (response?.type === "success") {
+        const accessToken = response.authentication?.accessToken;
+        if (accessToken) {
+          await getUserInfo(accessToken);
+          router.push("/(tabs)");
+          Toast.show("Welcome Home", { type: "success" });
+        }
+      }
+    };
+
+    handleSigninGoogle();
+  }, [response, getUserInfo]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
+  // ... rest of your component rendering logic ...
 
   return (
     <LinearGradient
       colors={["#E5ECF9", "#F6F7F9"]}
       style={{ flex: 1, paddingTop: 20 }}
     >
-      <ScrollView>
-        <Image
-          style={styles.signInImage}
-          source={require("@/assets/sign-in/Sign_up.png")}
+    <ScrollView>
+    <Image
+      style={styles.signInImage}
+      source={require("@/assets/sign-in/Sign_up.png")}
+    />
+    <Text style={[styles.welcomeText, { fontFamily: "Raleway_700Bold" }]}>
+      Let's get started!
+    </Text>
+    <Text style={styles.learningText}>Create an account to Gyanoda</Text>
+    <View style={styles.inputContainer}>
+      <View>
+        <TextInput
+          style={[styles.input, { paddingLeft: 40, marginBottom: -12 }]}
+          keyboardType="default"
+          value={userInfo.name}
+          placeholder="Enter your name.."
+          onChangeText={(value) =>
+            setUserInfo({ ...userInfo, name: value })
+          }
         />
-        <Text style={[styles.welcomeText, { fontFamily: "Raleway_700Bold" }]}>
-          Let's get started!
-        </Text>
-        <Text style={styles.learningText}>Create an account to Gyanoda</Text>
-        <View style={styles.inputContainer}>
-          <View>
-            <TextInput
-              style={[styles.input, { paddingLeft: 40, marginBottom: -12 }]}
-              keyboardType="default"
-              value={userInfo.name}
-              placeholder="Enter your name.."
-              onChangeText={(value) =>
-                setUserInfo({ ...userInfo, name: value })
-              }
-            />
-            <AntDesign
-              style={{ position: "absolute", left: 26, top: 14 }}
-              name="user"
-              size={20}
-              color={"#A1A1A1"}
-            />
+        <AntDesign
+          style={{ position: "absolute", left: 26, top: 14 }}
+          name="user"
+          size={20}
+          color={"#A1A1A1"}
+        />
+      </View>
+      <View>
+        <TextInput
+          style={[styles.input, { paddingLeft: 40 }]}
+          keyboardType="email-address"
+          value={userInfo.email}
+          placeholder="example@email.com"
+          onChangeText={(value) =>
+            setUserInfo({ ...userInfo, email: value })
+          }
+        />
+        <Fontisto
+          style={{ position: "absolute", left: 26, top: 17.8 }}
+          name="email"
+          size={20}
+          color={"#A1A1A1"}
+        />
+        {required && (
+          <View style={commonStyles.errorContainer}>
+            <Entypo name="cross" size={18} color={"red"} />
           </View>
-          <View>
-            <TextInput
-              style={[styles.input, { paddingLeft: 40 }]}
-              keyboardType="email-address"
-              value={userInfo.email}
-              placeholder="example@email.com"
-              onChangeText={(value) =>
-                setUserInfo({ ...userInfo, email: value })
-              }
+        )}
+        <View style={{ marginTop: 15 }}>
+          <TextInput
+            style={commonStyles.input}
+            keyboardType="default"
+            secureTextEntry={!isPasswordVisible}
+            defaultValue=""
+            placeholder="Enter password..."
+            onChangeText={handlePasswordValidation}
+          />
+          <TouchableOpacity
+            style={styles.visibleIcon}
+            onPress={() => setPasswordVisible(!isPasswordVisible)}
+          >
+            {isPasswordVisible ? (
+              <Ionicons name="eye-outline" size={23} color={"#747474"} />
+            ) : (
+              <Ionicons
+                name="eye-off-outline"
+                size={23}
+                color={"#747474"}
+              />
+            )}
+          </TouchableOpacity>
+          <SimpleLineIcons
+            style={styles.icon2}
+            name="lock"
+            size={20}
+            color={"#A1A1A1"}
+          />
+        </View>
+        {error.password && (
+          <View style={[commonStyles.errorContainer, { top: 125 }]}>
+            <Entypo name="cross" size={18} color={"red"} />
+            <Text style={{ color: "red", fontSize: 11, marginTop: -1 }}>
+              {error.password}
+            </Text>
+          </View>
+        )}
+        <View style={{ marginTop: 15 }}>
+          <TextInput
+            style={commonStyles.input}
+            keyboardType="phone-pad"
+            value={userInfo.phone}
+            placeholder="Enter your phone number..."
+            onChangeText={handlePhoneNumberChange}
+            onBlur={handlePhoneNumberValidation}
+          />
+          <SimpleLineIcons
+            style={styles.icon2}
+            name="phone"
+            size={20}
+            color={"#A1A1A1"}
+          />
+        </View>
+        {error.phone && (
+          <View style={[commonStyles.errorContainer, { top: 195 }]}>
+            <Entypo name="cross" size={18} color={"red"} />
+            <Text style={{ color: "red", fontSize: 11, marginTop: -1 }}>
+              {error.phone}
+            </Text>
+          </View>
+        )}
+        <View style={{ marginTop: 15 }}>
+          <View style={styles.locationInputContainer}>
+            <GooglePlacesAutocomplete
+              placeholder="Enter your location.."
+              onPress={(data, details = null) => {
+                setUserInfo({ ...userInfo, location: data.description });
+                setLocationInputValue(data.description);
+              }}
+              query={{
+                key: "AIzaSyDrIlKE-OzCydDLFrnffUK3Lazd3A3n7vg",
+                language: "en",
+              }}
+              textInputProps={{
+                value: locationInputValue,
+                onChangeText: setLocationInputValue,
+              }}
+              styles={{
+                container: {
+                  flex: 1,
+                },
+                textInput: {
+                  ...styles.input,
+                  paddingLeft: 40,
+                  paddingRight: 110,
+                },
+                listView: {
+                  backgroundColor: "white",
+                  borderRadius: 8,
+                  marginHorizontal: 16,
+                  marginTop: 5,
+                },
+              }}
+              fetchDetails={true}
+              enablePoweredByContainer={false}
             />
-            <Fontisto
-              style={{ position: "absolute", left: 26, top: 17.8 }}
-              name="email"
+            <TouchableOpacity
+              style={styles.autoCompleteButton}
+              onPress={handleAutoCompleteLocation}
+            >
+              <Text style={styles.autoCompleteButtonText}>
+                Allow-location
+              </Text>
+            </TouchableOpacity>
+            <SimpleLineIcons
+              style={{
+                position: "absolute",
+                left: 23,
+                top: 17.8,
+              }}
+              name="location-pin"
               size={20}
               color={"#A1A1A1"}
             />
-            {required && (
-              <View style={commonStyles.errorContainer}>
-                <Entypo name="cross" size={18} color={"red"} />
-              </View>
-            )}
-            <View style={{ marginTop: 15 }}>
-              <TextInput
-                style={commonStyles.input}
-                keyboardType="default"
-                secureTextEntry={!isPasswordVisible}
-                defaultValue=""
-                placeholder="Enter password..."
-                onChangeText={handlePasswordValidation}
-              />
-              <TouchableOpacity
-                style={styles.visibleIcon}
-                onPress={() => setPasswordVisible(!isPasswordVisible)}
-              >
-                {isPasswordVisible ? (
-                  <Ionicons name="eye-outline" size={23} color={"#747474"} />
-                ) : (
-                  <Ionicons
-                    name="eye-off-outline"
-                    size={23}
-                    color={"#747474"}
-                  />
-                )}
-              </TouchableOpacity>
-              <SimpleLineIcons
-                style={styles.icon2}
-                name="lock"
-                size={20}
-                color={"#A1A1A1"}
-              />
-            </View>
-            {error.password && (
-              <View style={[commonStyles.errorContainer, { top: 125 }]}>
-                <Entypo name="cross" size={18} color={"red"} />
-                <Text style={{ color: "red", fontSize: 11, marginTop: -1 }}>
-                  {error.password}
-                </Text>
-              </View>
-            )}
-            <View style={{ marginTop: 15 }}>
-              <TextInput
-                style={commonStyles.input}
-                keyboardType="phone-pad"
-                value={userInfo.phone}
-                placeholder="Enter your phone number..."
-                onChangeText={handlePhoneNumberChange}
-                onBlur={handlePhoneNumberValidation}
-              />
-              <SimpleLineIcons
-                style={styles.icon2}
-                name="phone"
-                size={20}
-                color={"#A1A1A1"}
-              />
-            </View>
-            {error.phone && (
-              <View style={[commonStyles.errorContainer, { top: 195 }]}>
-                <Entypo name="cross" size={18} color={"red"} />
-                <Text style={{ color: "red", fontSize: 11, marginTop: -1 }}>
-                  {error.phone}
-                </Text>
-              </View>
-            )}
-            <View style={{ marginTop: 15 }}>
-              <View style={styles.locationInputContainer}>
-                <GooglePlacesAutocomplete
-                  placeholder="Enter your location.."
-                  onPress={(data, details = null) => {
-                    setUserInfo({ ...userInfo, location: data.description });
-                    setLocationInputValue(data.description);
-                  }}
-                  query={{
-                    key: "AIzaSyDrIlKE-OzCydDLFrnffUK3Lazd3A3n7vg",
-                    language: "en",
-                  }}
-                  textInputProps={{
-                    value: locationInputValue,
-                    onChangeText: setLocationInputValue,
-                  }}
-                  styles={{
-                    container: {
-                      flex: 1,
-                    },
-                    textInput: {
-                      ...styles.input,
-                      paddingLeft: 40,
-                      paddingRight: 110,
-                    },
-                    listView: {
-                      backgroundColor: "white",
-                      borderRadius: 8,
-                      marginHorizontal: 16,
-                      marginTop: 5,
-                    },
-                  }}
-                  fetchDetails={true}
-                  enablePoweredByContainer={false}
-                />
-                <TouchableOpacity
-                  style={styles.autoCompleteButton}
-                  onPress={handleAutoCompleteLocation}
-                >
-                  <Text style={styles.autoCompleteButtonText}>
-                    Allow-location
-                  </Text>
-                </TouchableOpacity>
-                <SimpleLineIcons
-                  style={{
-                    position: "absolute",
-                    left: 23,
-                    top: 17.8,
-                  }}
-                  name="location-pin"
-                  size={20}
-                  color={"#A1A1A1"}
-                />
-              </View>
-            </View>
-            <View style={styles.checkboxContainer}>
-              <CheckBox
-                checked={isTermsChecked}
-                onPress={() => setTermsChecked(!isTermsChecked)}
-              />
-              <TouchableOpacity onPress={() => router.push("/(routes)/terms")}>
-                <Text style={styles.checkboxText}>
-                  I agree to the Terms & Conditions
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={styles.signupButton}
-              onPress={handleSignIn}
-            >
-              {buttonSpinner ? (
-                <ActivityIndicator size="small" color={"white"} />
-              ) : (
-                <Text style={styles.signupButtonText}>Sign Up</Text>
-              )}
-            </TouchableOpacity>
-
-            <View style={styles.socialLoginContainer}>
-              <TouchableOpacity>
-                <FontAwesome name="google" size={30} />
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <FontAwesome name="facebook" size={30} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.signupRedirect}>
-              <Text style={{ fontSize: 18, fontFamily: "Raleway_600SemiBold" }}>
-                Already have an account?
-              </Text>
-              <TouchableOpacity onPress={() => router.push("/(routes)/login")}>
-                <Text
-                  style={{
-                    fontSize: 18,
-                    fontFamily: "Raleway_600SemiBold",
-                    color: "#2467EC",
-                    marginLeft: 5,
-                  }}
-                >
-                  Login
-                </Text>
-              </TouchableOpacity>
-            </View>
           </View>
         </View>
-      </ScrollView>
+        <View style={styles.checkboxContainer}>
+          <CheckBox
+            checked={isTermsChecked}
+            onPress={() => setTermsChecked(!isTermsChecked)}
+          />
+          <TouchableOpacity onPress={() => router.push("/(routes)/terms")}>
+            <Text style={styles.checkboxText}>
+              I agree to the Terms & Conditions
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          style={styles.signupButton}
+          onPress={handleSignIn}
+        >
+          {buttonSpinner ? (
+            <ActivityIndicator size="small" color={"white"} />
+          ) : (
+            <Text style={styles.signupButtonText}>Sign Up</Text>
+          )}
+        </TouchableOpacity>
+
+        <View style={styles.socialLoginContainer}>
+          <TouchableOpacity onPress={() => promptAsync()}>
+            <FontAwesome name="google" size={30} />
+          </TouchableOpacity>
+          <TouchableOpacity>
+            <FontAwesome name="facebook" size={30} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.signupRedirect}>
+          <Text style={{ fontSize: 18, fontFamily: "Raleway_600SemiBold" }}>
+            Already have an account?
+          </Text>
+          <TouchableOpacity onPress={() => router.push("/(routes)/login")}>
+            <Text
+              style={{
+                fontSize: 18,
+                fontFamily: "Raleway_600SemiBold",
+                color: "#2467EC",
+                marginLeft: 5,
+              }}
+            >
+              Login
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  </ScrollView>
     </LinearGradient>
   );
 }
