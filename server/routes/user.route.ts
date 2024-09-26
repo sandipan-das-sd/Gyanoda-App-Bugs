@@ -18,7 +18,8 @@ import {
   postResetPassword,
   getResetPassword,
   clearUserCache,
-  getUserProfileAndUpdate
+  getUserProfileAndUpdate,
+  googleSignIn
   
 } from "../controllers/user.controller";
 import { authorizeRoles, isAutheticated } from "../middleware/auth";
@@ -36,6 +37,7 @@ userRouter.get("/logout", isAutheticated, logoutUser);
 
 //Resend OTP for activate Account
 userRouter.post('/resend-otp',resendOtp)
+userRouter.post('/google-signin', googleSignIn);
 
 userRouter.get('/refreshtoken',updateAccessToken)
 

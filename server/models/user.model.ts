@@ -47,7 +47,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema(
     phone: {
             type: String,
             unique: true,
-            required: [true, "Please enter your mobile no"],
+            // required: [true, "Please enter your mobile no"],
             validate: {
               validator: function (value: string) {
                 return phoneRegexPattern.test(value);
