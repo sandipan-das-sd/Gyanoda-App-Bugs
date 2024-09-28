@@ -51,6 +51,22 @@ const CourseDetailScreen = () => {
     }
   }, [user, courseData._id]);
 
+  const renderRatingAndPurchaseStatus = () => (
+    <View style={styles.ratingAndPurchaseContainer}>
+      
+      {/* {checkPurchased && (
+        <View style={styles.purchasedIndicator}>
+          <Text style={styles.purchasedText}>Purchased</Text>
+        </View>
+      )} */}
+       <View style={checkPurchased ? styles.purchasedIndicator : styles.notPurchasedIndicator}>
+        <Text style={checkPurchased ? styles.purchasedText : styles.notPurchasedText}>
+          {checkPurchased ? "Purchased" : "Not Purchased"}
+        </Text>
+      </View>
+    </View>
+  );
+
   const checkIfInCart = useCallback(async () => {
     const existingCartData = await AsyncStorage.getItem("cart");
     const cartData = existingCartData ? JSON.parse(existingCartData) : [];
@@ -207,6 +223,8 @@ const CourseDetailScreen = () => {
         />
         <View style={styles.contentContainer}>
           <Text style={styles.courseTitle}>{courseData?.name}</Text>
+          {renderRatingAndPurchaseStatus()}
+          
           <View style={styles.ratingContainer}>
             <FontAwesome name="star" size={14} color="#FFB800" />
             <Text style={styles.ratingText}>{courseData?.ratings}</Text>
@@ -443,6 +461,36 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 30,
     alignItems: "center",
+  },
+  ratingAndPurchaseContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+
+  purchasedIndicator: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  purchasedText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  notPurchasedIndicator: {
+    backgroundColor: '#FFA500',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+ 
+  notPurchasedText: {
+    color: '#000000',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });
 
