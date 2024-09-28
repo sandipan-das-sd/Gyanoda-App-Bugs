@@ -4,6 +4,7 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import React, { useRef, useState, useEffect } from "react";
 import Button from "@/components/button/button";
@@ -17,6 +18,7 @@ export default function VerifyAccountScreen() {
   const [code, setCode] = useState<string[]>(new Array(4).fill(""));
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const inputs = useRef<React.RefObject<TextInput>[]>(
     [...Array(4)].map(() => React.createRef<TextInput>())
   );
@@ -49,6 +51,8 @@ export default function VerifyAccountScreen() {
   };
 
   const handleSubmit = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
     const otp = code.join("");
     const activation_token = await AsyncStorage.getItem("activation_token");
     if (activation_token) {
@@ -68,6 +72,7 @@ export default function VerifyAccountScreen() {
     } else {
       Toast.show("Activation token not found", { type: "danger" });
     }
+    setIsLoading(false);
   };
 
   const handleResendCode = async () => {
@@ -146,6 +151,11 @@ export default function VerifyAccountScreen() {
       </View>
       <View style={{ marginTop: 10 }}>
         <Button title="Verify" onPress={handleSubmit} />
+        {isLoading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#3876EE" />
+          </View>
+        )}
       </View>
       <TouchableOpacity
         style={[styles.resendButton, !canResend && styles.resendButtonDisabled]}
@@ -240,5 +250,15 @@ const styles = StyleSheet.create({
   },
   backText: {
     fontSize: 16,
+  },
+  loadingOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
   },
 });

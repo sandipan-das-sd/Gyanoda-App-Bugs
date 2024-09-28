@@ -11,7 +11,10 @@
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ffffff",
+      "facebookScheme": "fb1184840985908097",
+      "facebookAppId": "1184840985908097",
+      "facebookDisplayName": "Gyanoda"
     },
     "ios": {
       "supportsTablet": true,
@@ -43,6 +46,16 @@
     },
     "plugins": [
       "expo-router"
+      ,
+      [
+        "react-native-fbsdk-next",
+        {
+          "appID": "1184840985908097",
+          "clientToken": "fde0774f1a64181a57c1c528deaf9b1a",
+          "displayName": "Gyanoda"
+          
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

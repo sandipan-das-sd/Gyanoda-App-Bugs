@@ -41,7 +41,9 @@ import * as Location from "expo-location";
 import * as WebBrowser from "expo-web-browser";
 import * as Google from "expo-auth-session/providers/google";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { getAuth, FacebookAuthProvider, signInWithCredential } from 'firebase/auth';
+import { firebase } from '../../../utils/config';
+import { LoginManager, AccessToken } from 'react-native-fbsdk-next';
 WebBrowser.maybeCompleteAuthSession();
 
 export default function SignUpScreen() {
@@ -54,6 +56,7 @@ export default function SignUpScreen() {
     phone: "+91",
     location: "",
   });
+  const [initializing, setInitializing] = useState(true);
   const [userDetails, setUserDetails] = useState(null);
   const [required, setRequired] = useState("");
   const [error, setError] = useState({
@@ -80,6 +83,67 @@ export default function SignUpScreen() {
     iosClientId:
       "1035545013004-m8vqnen4o8ts8b3tnevke5bhkesclm9l.apps.googleusercontent.com",
   });
+  const onAuthStateChanged = (userInfo:any) => {
+    if (userInfo) {
+      setUserInfo(userInfo);
+    }
+    if (initializing) 
+      setInitializing(false);
+  };
+  useEffect(() => {
+    const subscriber = firebase.auth().onAuthStateChanged(onAuthStateChanged);
+    return subscriber;
+  }, []);
+
+  const signInWithFacebook = async () => {
+    try {
+      await LoginManager.logInWithPermissions(['public_profile', 'email']);
+      const data = await AccessToken.getCurrentAccessToken();
+      if (!data) {
+        return;
+      }
+      const facebookCredential = FacebookAuthProvider.credential(data.accessToken);
+      const auth = getAuth();
+      const response = await signInWithCredential(auth, facebookCredential);
+      console.log(response);
+      await sendFacebookUserDataToServer(response.user);
+    } catch (error) {
+      console.log(error);
+      Toast.show("Error occurred during Facebook sign-in", { type: "danger" });
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await firebase.auth().signOut();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const sendFacebookUserDataToServer = useCallback(async (userData:any) => {
+    try {
+      const response = await axios.post(`${SERVER_URI}/facebook-signin`, {
+        email: userData.email,
+        name: userData.displayName,
+        picture: userData.photoURL,
+        id: userData.uid,
+      });
+      console.log("Server response:", response.data);
+      
+      if (response.data.accessToken) {
+        await AsyncStorage.setItem("access_token", response.data.accessToken);
+      }
+      if (response.data.refreshToken) {
+        await AsyncStorage.setItem("refresh_token", response.data.refreshToken);
+      }
+
+      Toast.show("Facebook sign-in successful", { type: "success" });
+      router.push("/(tabs)");
+    } catch (error) {
+      console.error("Error sending user data to server:", error);
+      Toast.show("Error occurred during Facebook sign-in", { type: "danger" });
+    }
+  }, []);
 
   const handlePasswordValidation = useCallback((value: string) => {
     const password = value;
@@ -487,7 +551,7 @@ export default function SignUpScreen() {
           <TouchableOpacity onPress={() => promptAsync()}>
             <FontAwesome name="google" size={30} />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={signInWithFacebook}>
             <FontAwesome name="facebook" size={30} />
           </TouchableOpacity>
         </View>
