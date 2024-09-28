@@ -108,7 +108,9 @@ export default function CourseLesson() {
   const [currentlyPlayingVideo, setCurrentlyPlayingVideo] = useState<
     string | null
   >(null);
+  
 
+  
   const videoSections: string[] = [
     ...new Set(videoData.map((video) => video.section)),
   ];
@@ -138,6 +140,60 @@ export default function CourseLesson() {
       useNativeDriver: true,
     }).start();
   };
+
+  // const togglePlayPause = async (videoId: string) => {
+  //   const videoRef = videoRefs.current[videoId];
+  //   if (videoRef) {
+  //     const status = await videoRef.getStatusAsync();
+  //     if (status.isLoaded) {
+  //       if (status.isPlaying) {
+  //         await pauseVideo(videoId);
+  //         setCurrentlyPlayingVideo(null);
+  //       } else {
+  //         if (currentlyPlayingVideo && currentlyPlayingVideo !== videoId) {
+  //           await pauseVideo(currentlyPlayingVideo);
+  //         }
+  //         await videoRef.playAsync();
+  //         setIsPlaying((prev) => ({ ...prev, [videoId]: true }));
+  //         setCurrentlyPlayingVideo(videoId);
+  //       }
+  //     }
+  //   }
+  // };
+  const togglePlayPause = async (videoId: string) => {
+    const videoRef = videoRefs.current[videoId];
+    if (videoRef) {
+      const status = await videoRef.getStatusAsync();
+      if (status.isLoaded) {
+        if (status.isPlaying) {
+          await pauseVideo(videoId);
+          setCurrentlyPlayingVideo(null);
+        } else {
+          if (currentlyPlayingVideo && currentlyPlayingVideo !== videoId) {
+            await pauseVideo(currentlyPlayingVideo);
+          }
+          await videoRef.playAsync();
+          setIsPlaying((prev) => ({ ...prev, [videoId]: true }));
+          setCurrentlyPlayingVideo(videoId);
+        }
+      }
+    }
+  };
+  const toggleFullscreen = async (videoId: string) => {
+    const videoRef = videoRefs.current[videoId];
+    if (videoRef) {
+      const status = await videoRef.getStatusAsync();
+      if (status.isLoaded) {
+        if (status.isPlaying) {
+          await videoRef.presentFullscreenPlayer();
+        } else {
+          await videoRef.playAsync();
+          await videoRef.presentFullscreenPlayer();
+        }
+      }
+    }
+  };
+
 
   const fetchVimeoVideoUrl = async (videoId: string) => {
     try {
@@ -178,26 +234,7 @@ export default function CourseLesson() {
     }
   };
 
-  const togglePlayPause = async (videoId: string) => {
-    const videoRef = videoRefs.current[videoId];
-    if (videoRef) {
-      const status = await videoRef.getStatusAsync();
-      if (status.isLoaded) {
-        if (status.isPlaying) {
-          await pauseVideo(videoId);
-          setCurrentlyPlayingVideo(null);
-        } else {
-          // Pause the currently playing video (if any)
-          if (currentlyPlayingVideo && currentlyPlayingVideo !== videoId) {
-            await pauseVideo(currentlyPlayingVideo);
-          }
-          await videoRef.playAsync();
-          setIsPlaying((prev) => ({ ...prev, [videoId]: true }));
-          setCurrentlyPlayingVideo(videoId);
-        }
-      }
-    }
-  };
+
 
   return (
     <ScrollView style={styles.container}>
@@ -268,15 +305,22 @@ export default function CourseLesson() {
                           shouldPlay={false}
                           isLooping={false}
                           style={styles.video}
+                          useNativeControls
                         />
+                       
                         <View style={styles.playPauseButton}>
+                          
                           <MaterialIcons
                             name={isPlaying[video.id] ? "pause" : "play-arrow"}
                             size={36}
                             color="#FFFFFF"
                           />
                         </View>
+                         
                       </TouchableOpacity>
+                      
+
+                   
                     ) : (
                       <TouchableOpacity
                         style={styles.loadVideoButton}
