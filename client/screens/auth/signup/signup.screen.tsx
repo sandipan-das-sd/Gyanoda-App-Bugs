@@ -48,6 +48,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function SignUpScreen() {
   const [isPasswordVisible, setPasswordVisible] = useState(false);
+  const [isFacebookUser, setIsFacebookUser] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isFacebookLoading, setIsFacebookLoading] = useState(false);
   const [buttonSpinner, setButtonSpinner] = useState(false);
@@ -96,7 +97,21 @@ export default function SignUpScreen() {
     const subscriber = firebase.auth().onAuthStateChanged(onAuthStateChanged);
     return subscriber;
   }, []);
-
+  useEffect(() => {
+    const checkFacebookSignIn = async () => {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const providerData = currentUser.providerData;
+        const isFacebookProvider = providerData.some(
+          (provider) => provider.providerId === FacebookAuthProvider.PROVIDER_ID
+        );
+        setIsFacebookUser(isFacebookProvider);
+      }
+    };
+  
+    checkFacebookSignIn();
+  }, []);
   // const signInWithFacebook = async () => {
   //   setIsFacebookLoading(true);
   //   try {
@@ -117,6 +132,11 @@ export default function SignUpScreen() {
   // };
   const signInWithFacebook = async () => {
     setIsFacebookLoading(true);
+    if (isFacebookUser) {
+      Toast.show("You're already signed in with Facebook.Please Go to Login ", { type: "info" });
+      router.push('/(routes)/login')
+     
+    }
     try {
       await LoginManager.logInWithPermissions(['public_profile', 'email']);
       const data = await AccessToken.getCurrentAccessToken();
@@ -632,6 +652,7 @@ export default function SignUpScreen() {
             )}
            
           </TouchableOpacity>
+     
         </View>
 
         <View style={styles.signupRedirect}>
