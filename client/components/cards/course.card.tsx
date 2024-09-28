@@ -26,10 +26,17 @@ interface CoursesType {
 interface CourseCardProps {
   item: CoursesType;
   isLoading: boolean;
+  isPurchased: boolean;
 }
 
 const LoadingIndicator = () => {
   const [rotation] = useState(new Animated.Value(0));
+  const [messageIndex, setMessageIndex] = useState(0);
+  const messages = [
+    "Loading...",
+    "This may take some time...",
+    "Congrats! It's done!",
+  ];
 
   useEffect(() => {
     Animated.loop(
@@ -39,6 +46,12 @@ const LoadingIndicator = () => {
         useNativeDriver: true,
       })
     ).start();
+
+    const messageTimer = setInterval(() => {
+      setMessageIndex((prevIndex) => (prevIndex + 1) % messages.length);
+    }, 4000);
+
+    return () => clearInterval(messageTimer);
   }, []);
 
   const spin = rotation.interpolate({
@@ -53,13 +66,14 @@ const LoadingIndicator = () => {
       >
         <FontAwesome name="circle-o-notch" size={40} color="#FFFFFF" />
       </Animated.View>
-      <Text style={loaderStyles.loadingText}>Loading...</Text>
+      <Text style={loaderStyles.loadingText}>{messages[messageIndex]}</Text>
     </View>
   );
 };
 
+// CourseCard Component
 const CourseCard: React.FC<CourseCardProps> = memo(
-  ({ item, isLoading: initialLoading }) => {
+  ({ item, isLoading: initialLoading, isPurchased }) => {
     const [isClicked, setIsClicked] = useState(false);
 
     const handlePress = useCallback(() => {
@@ -71,7 +85,7 @@ const CourseCard: React.FC<CourseCardProps> = memo(
           params: { item: itemString },
         });
         setIsClicked(false);
-      }, 1500);
+      }, 9000);
     }, [item]);
 
     if (initialLoading) {
@@ -105,8 +119,16 @@ const CourseCard: React.FC<CourseCardProps> = memo(
           </View>
           <View style={styles.priceContainer}>
             <View style={styles.priceWrapper}>
-              <Text style={styles.currentPrice}>₹{item.price}</Text>
-              <Text style={styles.originalPrice}>₹{item.estimatedPrice}</Text>
+              {isPurchased ? (
+                <Text style={styles.purchasedText}>Purchased</Text>
+              ) : (
+                <>
+                  <Text style={styles.currentPrice}>₹{item.price}</Text>
+                  <Text style={styles.originalPrice}>
+                    ₹{item.estimatedPrice}
+                  </Text>
+                </>
+              )}
             </View>
             <View style={styles.lectureInfo}>
               <Ionicons name="list-outline" size={20} color="#8A8A8A" />
@@ -206,6 +228,12 @@ const styles = StyleSheet.create({
     color: "#888",
     fontFamily: "Nunito_400Regular",
   },
+  purchasedText: {
+    fontSize: 18,
+    fontWeight: "600",
+    fontFamily: "Nunito_700Bold",
+    color: "#4CAF50",
+  },
   lectureInfo: {
     flexDirection: "row",
     alignItems: "center",
@@ -237,6 +265,7 @@ const loaderStyles = StyleSheet.create({
     fontWeight: "600",
     fontFamily: "Nunito_600SemiBold",
     color: "#FFFFFF",
+    textAlign: "center",
   },
 });
 
