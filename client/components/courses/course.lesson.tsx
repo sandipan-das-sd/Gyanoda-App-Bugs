@@ -1,276 +1,4 @@
-// import {
-//   View,
-//   Text,
-//   TouchableOpacity,
-//   StyleSheet,
-//   Dimensions,
-//   ActivityIndicator,
-// } from "react-native";
-// import React, { useState, useEffect, useRef } from "react";
-// import { Entypo, Feather } from "@expo/vector-icons";
-// import { Video, ResizeMode, AVPlaybackStatus } from "expo-av";
-
-// const { width } = Dimensions.get("window");
-// const videoHeight = width * (9 / 16);
-
-// const VIMEO_VIDEO_ID = "972392519";
-// const VIDEO_DURATION = 30000;
-
-// export default function CourseLesson({
-//   courseDetails,
-// }: {
-//   courseDetails: CoursesType;
-// }) {
-//   const [visibleSections, setVisibleSections] = useState<Set<string>>(
-//     new Set<string>()
-//   );
-//   const [videoLinks, setVideoLinks] = useState<Record<string, string>>({});
-//   const [loading, setLoading] = useState<Record<string, boolean>>({});
-//   const videoRefs = useRef<Record<string, Video | null>>({});
-
-//   const videoSections: string[] = [
-//     ...new Set<string>(
-//       courseDetails.courseData.map((item: CourseDataType) => item.videoSection)
-//     ),
-//   ];
-
-//   const toggleSection = (section: string) => {
-//     const newVisibleSections = new Set(visibleSections);
-//     if (newVisibleSections.has(section)) {
-//       newVisibleSections.delete(section);
-//     } else {
-//       newVisibleSections.add(section);
-//     }
-//     setVisibleSections(newVisibleSections);
-//   };
-
-//   const fetchVimeoVideoUrl = async () => {
-//     try {
-//       const response = await fetch(
-//         `https://api.vimeo.com/videos/${VIMEO_VIDEO_ID}?fields=files`,
-//         {
-//           headers: {
-//             Authorization: `bearer 3bf28d224161d1f6aa19abe18b9aa16d`,
-//             Accept: "application/vnd.vimeo.*+json; version=3.4",
-//           },
-//         }
-//       );
-//       if (!response.ok) {
-//         throw new Error("Failed to fetch video data.");
-//       }
-//       const data = await response.json();
-//       return data?.files?.[0]?.link || null;
-//     } catch (error) {
-//       console.error("Error fetching Vimeo video URL:", error);
-//       return null;
-//     }
-//   };
-
-//   const loadVideo = async (videoId: string) => {
-//     setLoading((prev) => ({ ...prev, [videoId]: true }));
-//     const videoLink = await fetchVimeoVideoUrl();
-//     if (videoLink) {
-//       setVideoLinks((prev) => ({ ...prev, [videoId]: videoLink }));
-//     }
-//     setLoading((prev) => ({ ...prev, [videoId]: false }));
-//   };
-
-//   const onPlaybackStatusUpdate = (
-//     status: AVPlaybackStatus,
-//     videoId: string
-//   ) => {
-//     if (status.isLoaded && status.positionMillis >= VIDEO_DURATION) {
-//       videoRefs.current[videoId]?.setPositionAsync(0);
-//     }
-//   };
-
-//   return (
-//     <View style={{ flex: 1, rowGap: 10, marginBottom: 10 }}>
-//       <View style={styles.contentContainer}>
-//         <View>
-//           {videoSections.map((section: string, sectionIndex: number) => {
-//             const isSectionVisible = visibleSections.has(section);
-
-//             // Filter videos by section
-//             const sectionVideos: CourseDataType[] =
-//               courseDetails?.courseData?.filter(
-//                 (i: CourseDataType) => i.videoSection === section
-//               );
-
-//             return (
-//               <View key={sectionIndex}>
-//                 <TouchableOpacity onPress={() => toggleSection(section)}>
-//                   <View style={styles.sectionHeader}>
-//                     <Text style={styles.sectionTitle}>{section}</Text>
-//                     <Entypo
-//                       name={isSectionVisible ? "chevron-up" : "chevron-down"}
-//                       size={23}
-//                       color="#6707FE"
-//                     />
-//                   </View>
-//                 </TouchableOpacity>
-//                 {isSectionVisible && (
-//                   <>
-//                     {sectionVideos.map(
-//                       (video: CourseDataType, videoIndex: number) => (
-//                         <View key={videoIndex} style={styles.videoItem}>
-//                           <View style={styles.itemContainer}>
-//                             <View style={styles.itemContainerWrapper}>
-//                               <View style={styles.itemTitleWrapper}>
-//                                 <Feather
-//                                   name="video"
-//                                   size={20}
-//                                   color="#8a8a8a"
-//                                 />
-//                                 <Text style={styles.itemTitleText}>Demos</Text>
-//                               </View>
-//                               <View style={styles.itemDataContainer}>
-//                                 <Text style={styles.videoLength}></Text>
-//                               </View>
-//                             </View>
-//                           </View>
-//                           <View style={styles.videoContainer}>
-//                             {loading[video.videoUrl] ? (
-//                               <View style={styles.loadingContainer}>
-//                                 <ActivityIndicator
-//                                   size="large"
-//                                   color="#0000ff"
-//                                 />
-//                               </View>
-//                             ) : videoLinks[video.videoUrl] ? (
-//                               <Video
-//                                 ref={(ref) =>
-//                                   (videoRefs.current[video.videoUrl] = ref)
-//                                 }
-//                                 source={{ uri: videoLinks[video.videoUrl] }}
-//                                 rate={1.0}
-//                                 volume={1.0}
-//                                 isMuted={false}
-//                                 resizeMode={ResizeMode.CONTAIN}
-//                                 shouldPlay={false}
-//                                 isLooping={false}
-//                                 style={styles.video}
-//                                 useNativeControls
-//                                 onPlaybackStatusUpdate={(status) =>
-//                                   onPlaybackStatusUpdate(status, video.videoUrl)
-//                                 }
-//                               />
-//                             ) : (
-//                               <TouchableOpacity
-//                                 style={styles.loadVideoButton}
-//                                 onPress={() => loadVideo(video.videoUrl)}
-//                               >
-//                                 <Text style={styles.loadVideoButtonText}>
-//                                   Click To See
-//                                 </Text>
-//                               </TouchableOpacity>
-//                             )}
-//                           </View>
-//                         </View>
-//                       )
-//                     )}
-//                   </>
-//                 )}
-//               </View>
-//             );
-//           })}
-//         </View>
-//       </View>
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   videoContainer: {
-//     width: "100%",
-//     height: videoHeight,
-//     marginVertical: 10,
-//   },
-//   video: {
-//     width: "100%",
-//     height: "100%",
-//   },
-//   loadingContainer: {
-//     flex: 1,
-//     justifyContent: "center",
-//     alignItems: "center",
-//   },
-//   errorText: {
-//     textAlign: "center",
-//     color: "red",
-//     fontSize: 16,
-//   },
-//   contentContainer: {
-//     padding: 10,
-//     borderWidth: 1,
-//     borderColor: "#E1E2E5",
-//     backgroundColor: "#FFFFFF",
-//     borderRadius: 8,
-//   },
-//   sectionHeader: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     justifyContent: "space-between",
-//     paddingVertical: 10,
-//     borderBottomColor: "#DCDCDC",
-//     borderBottomWidth: 1,
-//   },
-//   sectionTitle: {
-//     fontSize: 18,
-//     fontFamily: "Raleway_600SemiBold",
-//   },
-//   videoItem: {
-//     borderWidth: 1,
-//     borderColor: "#E1E2E5",
-//     borderRadius: 8,
-//     marginTop: 10,
-//     overflow: "hidden",
-//   },
-//   itemContainer: {
-//     borderBottomWidth: 1,
-//     borderBottomColor: "#E1E2E5",
-//     marginHorizontal: 10,
-//     paddingVertical: 12,
-//   },
-//   itemContainerWrapper: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     justifyContent: "space-between",
-//   },
-//   itemTitleWrapper: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//   },
-//   itemTitleText: {
-//     marginLeft: 8,
-//     color: "#525258",
-//     fontSize: 16,
-//     fontFamily: "Nunito_500Medium",
-//   },
-//   itemDataContainer: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//   },
-//   videoLength: {
-//     marginRight: 6,
-//     color: "#818181",
-//     fontFamily: "Nunito_400Regular",
-//   },
-//   loadVideoButton: {
-//     backgroundColor: "#007bff",
-//     padding: 10,
-//     borderRadius: 5,
-//     alignItems: "center",
-//     justifyContent: "center",
-//     height: "100%",
-//   },
-//   loadVideoButtonText: {
-//     color: "#FFFFFF",
-//     fontSize: 16,
-//     fontWeight: "bold",
-//   },
-// });
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -279,9 +7,12 @@ import {
   Dimensions,
   ActivityIndicator,
   Image,
+  Animated,
+  ScrollView,
 } from "react-native";
-import { Entypo, Feather } from "@expo/vector-icons";
-import { Video, ResizeMode, AVPlaybackStatus } from "expo-av";
+import { Entypo, MaterialIcons } from "@expo/vector-icons";
+import { Video, ResizeMode } from "expo-av";
+import { LinearGradient } from "expo-linear-gradient";
 
 const { width } = Dimensions.get("window");
 const videoHeight = width * (9 / 16);
@@ -290,98 +21,122 @@ const videoHeight = width * (9 / 16);
 const videoData = [
   // Physics Videos
   {
-    id: "972392519",
+    id: "1007020735",
     title: "WBJEE Physics 2014 Solutions",
     subtitle: "Detailed explanations of Physics questions from WBJEE 2014",
-    thumbnailUrl: "https://example.com/wbjee-physics-2014.jpg",
+    thumbnailUrl: "../../assets/gyano.png",
     section: "Physics",
   },
   {
-    id: "972392520",
+    id: "1007843139",
     title: "WBJEE Physics 2015 Problem Solving",
     subtitle: "Step-by-step solutions for WBJEE 2015 Physics problems",
     thumbnailUrl: "https://example.com/wbjee-physics-2015.jpg",
     section: "Physics",
   },
   {
-    id: "972392521",
+    id: "1007212492",
     title: "WBJEE Physics 2022 Analysis",
     subtitle: "In-depth analysis of WBJEE 2022 Physics paper",
     thumbnailUrl: "https://example.com/wbjee-physics-2022.jpg",
     section: "Physics",
   },
   {
-    id: "972392522",
-    title: "WBJEE Physics 2024 Preparation",
-    subtitle: "Key topics and strategies for WBJEE 2024 Physics",
+    id: "1007031174",
+    title: "WBJEE Physics 2019 Preparation",
+    subtitle: "Key topics and strategies for WBJEE 2019 Physics",
     thumbnailUrl: "https://example.com/wbjee-physics-2024.jpg",
     section: "Physics",
   },
-
+  
   // Mathematics Videos
   {
-    id: "972392523",
+    id: "1008939163",
     title: "WBJEE Mathematics 2015 Solutions",
     subtitle: "Comprehensive solutions for WBJEE 2015 Mathematics questions",
     thumbnailUrl: "https://example.com/wbjee-math-2015.jpg",
     section: "Mathematics",
   },
   {
-    id: "972392524",
+    id: "1009443471",
     title: "WBJEE Mathematics 2020 Problem Solving",
     subtitle: "Effective techniques for solving WBJEE 2020 Math problems",
     thumbnailUrl: "https://example.com/wbjee-math-2020.jpg",
     section: "Mathematics",
   },
   {
-    id: "972392525",
+    id: "1009020366",
     title: "WBJEE Mathematics 2024 Preparation Guide",
     subtitle: "Essential topics and practice for WBJEE 2024 Mathematics",
     thumbnailUrl: "https://example.com/wbjee-math-2024.jpg",
     section: "Mathematics",
   },
-
+  
   // Chemistry Videos
   {
-    id: "972392526",
+    id: "1008398291",
     title: "WBJEE Chemistry 2014 Solutions",
     subtitle: "Detailed explanations of Chemistry questions from WBJEE 2014",
     thumbnailUrl: "https://example.com/wbjee-chemistry-2014.jpg",
     section: "Chemistry",
   },
   {
-    id: "972392527",
-    title: "WBJEE Chemistry 2020 Analysis",
-    subtitle: "Comprehensive analysis of WBJEE 2020 Chemistry paper",
+    id: "1008253490",
+    title: "WBJEE Chemistry 2022 Analysis",
+    subtitle: "Comprehensive analysis of WBJEE 2022 Chemistry paper",
     thumbnailUrl: "https://example.com/wbjee-chemistry-2020.jpg",
     section: "Chemistry",
   },
   {
-    id: "972392528",
-    title: "WBJEE Chemistry 2022 Problem Solving",
-    subtitle: "Effective strategies for WBJEE 2022 Chemistry questions",
+    id: "1008217615",
+    title: "WBJEE Chemistry 2020 Problem Solving",
+    subtitle: "Effective strategies for WBJEE 2020 Chemistry questions",
     thumbnailUrl: "https://example.com/wbjee-chemistry-2022.jpg",
     section: "Chemistry",
   },
 ];
 
 export default function CourseLesson() {
-  const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set<string>());
+  const [visibleSections, setVisibleSections] = useState<Set<string>>(
+    new Set<string>()
+  );
   const [videoLinks, setVideoLinks] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [isPlaying, setIsPlaying] = useState<Record<string, boolean>>({});
   const videoRefs = useRef<Record<string, Video | null>>({});
+  const fadeAnims = useRef<Record<string, Animated.Value>>({});
+  const [currentlyPlayingVideo, setCurrentlyPlayingVideo] = useState<
+    string | null
+  >(null);
 
-  const videoSections: string[] = [...new Set(videoData.map(video => video.section))];
+  const videoSections: string[] = [
+    ...new Set(videoData.map((video) => video.section)),
+  ];
 
-  const toggleSection = (section: string) => {
+  useEffect(() => {
+    videoSections.forEach((section) => {
+      fadeAnims.current[section] = new Animated.Value(0);
+    });
+  }, []);
+
+  const toggleSection = async (section: string) => {
     const newVisibleSections = new Set(visibleSections);
     if (newVisibleSections.has(section)) {
       newVisibleSections.delete(section);
+      // Pause all videos in this section
+      for (const video of videoData.filter((v) => v.section === section)) {
+        await pauseVideo(video.id);
+      }
     } else {
       newVisibleSections.add(section);
     }
     setVisibleSections(newVisibleSections);
+
+    Animated.timing(fadeAnims.current[section], {
+      toValue: newVisibleSections.has(section) ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
   };
 
   const fetchVimeoVideoUrl = async (videoId: string) => {
@@ -407,163 +162,200 @@ export default function CourseLesson() {
   };
 
   const loadVideo = async (videoId: string) => {
-    setLoading(prev => ({ ...prev, [videoId]: true }));
+    setLoading((prev) => ({ ...prev, [videoId]: true }));
     const videoLink = await fetchVimeoVideoUrl(videoId);
     if (videoLink) {
-      setVideoLinks(prev => ({ ...prev, [videoId]: videoLink }));
+      setVideoLinks((prev) => ({ ...prev, [videoId]: videoLink }));
     }
-    setLoading(prev => ({ ...prev, [videoId]: false }));
+    setLoading((prev) => ({ ...prev, [videoId]: false }));
   };
 
-  const onPlaybackStatusUpdate = (status: AVPlaybackStatus, videoId: string) => {
-    if (status.isLoaded) {
-      setIsPlaying(prev => ({ ...prev, [videoId]: status.isPlaying }));
-    }
-  };
-
-  const togglePlayPause = (videoId: string) => {
+  const pauseVideo = async (videoId: string) => {
     const videoRef = videoRefs.current[videoId];
     if (videoRef) {
-      if (isPlaying[videoId]) {
-        videoRef.pauseAsync();
-      } else {
-        videoRef.playAsync();
+      await videoRef.pauseAsync();
+      setIsPlaying((prev) => ({ ...prev, [videoId]: false }));
+    }
+  };
+
+  const togglePlayPause = async (videoId: string) => {
+    const videoRef = videoRefs.current[videoId];
+    if (videoRef) {
+      const status = await videoRef.getStatusAsync();
+      if (status.isLoaded) {
+        if (status.isPlaying) {
+          await pauseVideo(videoId);
+          setCurrentlyPlayingVideo(null);
+        } else {
+          // Pause the currently playing video (if any)
+          if (currentlyPlayingVideo && currentlyPlayingVideo !== videoId) {
+            await pauseVideo(currentlyPlayingVideo);
+          }
+          await videoRef.playAsync();
+          setIsPlaying((prev) => ({ ...prev, [videoId]: true }));
+          setCurrentlyPlayingVideo(videoId);
+        }
       }
     }
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       {videoSections.map((section: string, sectionIndex: number) => {
         const isSectionVisible = visibleSections.has(section);
-        const sectionVideos = videoData.filter(video => video.section === section);
+        const sectionVideos = videoData.filter(
+          (video) => video.section === section
+        );
 
         return (
-          <View key={sectionIndex}>
+          <View key={sectionIndex} style={styles.sectionContainer}>
             <TouchableOpacity onPress={() => toggleSection(section)}>
-              <View style={styles.sectionHeader}>
+              <LinearGradient
+                colors={["#6707FE", "#4A00E0"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.sectionHeader}
+              >
                 <Text style={styles.sectionTitle}>{section}</Text>
                 <Entypo
                   name={isSectionVisible ? "chevron-up" : "chevron-down"}
-                  size={23}
-                  color="#6707FE"
+                  size={24}
+                  color="#FFFFFF"
                 />
-              </View>
+              </LinearGradient>
             </TouchableOpacity>
-            {isSectionVisible && (
-              <>
-                {sectionVideos.map((video, videoIndex) => (
-                  <View key={videoIndex} style={styles.videoItem}>
-                    <View style={styles.itemContainer}>
-                      <View style={styles.itemContainerWrapper}>
-                        <View style={styles.itemTitleWrapper}>
-                          <Feather name="video" size={20} color="#8a8a8a" />
-                          <Text style={styles.itemTitleText}>{video.title}</Text>
-                        </View>
+            <Animated.View
+              style={[
+                styles.sectionContent,
+                {
+                  opacity: fadeAnims.current[section],
+                  display: isSectionVisible ? "flex" : "none",
+                },
+              ]}
+            >
+              {sectionVideos.map((video, videoIndex) => (
+                <View key={videoIndex} style={styles.videoItem}>
+                  <View style={styles.itemContainer}>
+                    <View style={styles.itemContainerWrapper}>
+                      <View style={styles.itemTitleWrapper}>
+                        <MaterialIcons
+                          name="ondemand-video"
+                          size={24}
+                          color="#6707FE"
+                        />
+                        <Text style={styles.itemTitleText}>{video.title}</Text>
                       </View>
-                      <Text style={styles.subtitleText}>{video.subtitle}</Text>
                     </View>
-                    <View style={styles.videoContainer}>
-                      {loading[video.id] ? (
-                        <View style={styles.loadingContainer}>
-                          <ActivityIndicator size="large" color="#0000ff" />
-                        </View>
-                      ) : videoLinks[video.id] ? (
-                        <>
-                          <Video
-                            ref={(ref) => (videoRefs.current[video.id] = ref)}
-                            source={{ uri: videoLinks[video.id] }}
-                            rate={1.0}
-                            volume={1.0}
-                            isMuted={false}
-                            resizeMode={ResizeMode.CONTAIN}
-                            shouldPlay={false}
-                            isLooping={false}
-                            style={styles.video}
-                            useNativeControls
-                            onPlaybackStatusUpdate={(status) =>
-                              onPlaybackStatusUpdate(status, video.id)
-                            }
+                    <Text style={styles.subtitleText}>{video.subtitle}</Text>
+                  </View>
+                  <View style={styles.videoContainer}>
+                    {loading[video.id] ? (
+                      <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#6707FE" />
+                      </View>
+                    ) : videoLinks[video.id] ? (
+                      <TouchableOpacity
+                        style={styles.videoWrapper}
+                        onPress={() => togglePlayPause(video.id)}
+                      >
+                        <Video
+                          ref={(ref) => (videoRefs.current[video.id] = ref)}
+                          source={{ uri: videoLinks[video.id] }}
+                          rate={1.0}
+                          volume={1.0}
+                          isMuted={false}
+                          resizeMode={ResizeMode.CONTAIN}
+                          shouldPlay={false}
+                          isLooping={false}
+                          style={styles.video}
+                        />
+                        <View style={styles.playPauseButton}>
+                          <MaterialIcons
+                            name={isPlaying[video.id] ? "pause" : "play-arrow"}
+                            size={36}
+                            color="#FFFFFF"
                           />
-                          <TouchableOpacity
-                            style={styles.playPauseButton}
-                            onPress={() => togglePlayPause(video.id)}
-                          >
-                            <Feather
-                              name={isPlaying[video.id] ? "pause" : "play"}
-                              size={30}
-                              color="#FFFFFF"
-                            />
-                          </TouchableOpacity>
-                        </>
-                      ) : (
-                        <TouchableOpacity
-                          style={styles.loadVideoButton}
-                          onPress={() => loadVideo(video.id)}
+                        </View>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.loadVideoButton}
+                        onPress={() => loadVideo(video.id)}
+                      >
+                        <Image
+                          source={{ uri: video.thumbnailUrl }}
+                          style={styles.thumbnail}
+                        />
+                        <LinearGradient
+                          colors={["rgba(0,0,0,0.5)", "rgba(0,0,0,0.8)"]}
+                          style={styles.thumbnailOverlay}
                         >
-                          <Image
-                            source={{ uri: video.thumbnailUrl }}
-                            style={styles.thumbnail}
+                          <MaterialIcons
+                            name="play-circle-filled"
+                            size={48}
+                            color="#FFFFFF"
                           />
                           <Text style={styles.loadVideoButtonText}>
-                            Click to Load Video
+                            Double click to See demo
                           </Text>
-                        </TouchableOpacity>
-                      )}
-                    </View>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    )}
                   </View>
-                ))}
-              </>
-            )}
+                </View>
+              ))}
+            </Animated.View>
           </View>
         );
       })}
-    </View>
+    </ScrollView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+    backgroundColor: "#F5F5F5",
   },
-  videoContainer: {
-    width: "100%",
-    height: videoHeight,
-    marginVertical: 10,
-  },
-  video: {
-    width: "100%",
-    height: "100%",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  sectionContainer: {
+    marginBottom: 16,
+    borderRadius: 8,
+    overflow: "hidden",
+    backgroundColor: "#FFFFFF",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   sectionHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 10,
-    borderBottomColor: "#DCDCDC",
-    borderBottomWidth: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  sectionContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
   videoItem: {
-    borderWidth: 1,
-    borderColor: "#E1E2E5",
+    marginTop: 16,
     borderRadius: 8,
-    marginTop: 10,
     overflow: "hidden",
+    backgroundColor: "#FFFFFF",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
   itemContainer: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#E1E2E5",
-    padding: 10,
+    padding: 16,
   },
   itemContainerWrapper: {
     flexDirection: "row",
@@ -575,42 +367,65 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   itemTitleText: {
-    marginLeft: 8,
-    color: "#525258",
-    fontSize: 16,
+    marginLeft: 12,
+    color: "#333333",
+    fontSize: 18,
     fontWeight: "500",
   },
   subtitleText: {
-    color: "#818181",
+    color: "#666666",
     fontSize: 14,
-    marginTop: 5,
+    marginTop: 8,
+  },
+  videoContainer: {
+    width: "100%",
+    height: videoHeight,
+  },
+  videoWrapper: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#000000",
+  },
+  video: {
+    width: "100%",
+    height: "100%",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F0F0F0",
   },
   loadVideoButton: {
-    backgroundColor: "#007bff",
-    borderRadius: 5,
-    alignItems: "center",
-    justifyContent: "center",
+    width: "100%",
     height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  thumbnail: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  thumbnailOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadVideoButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "bold",
-  },
-  thumbnail: {
-    width: "100%",
-    height: "80%",
-    resizeMode: "cover",
+    marginTop: 8,
   },
   playPauseButton: {
     position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: [{ translateX: -15 }, { translateY: -15 }],
     backgroundColor: "rgba(0, 0, 0, 0.5)",
-    borderRadius: 25,
-    width: 50,
-    height: 50,
+    borderRadius: 30,
+    width: 60,
+    height: 60,
     justifyContent: "center",
     alignItems: "center",
   },
