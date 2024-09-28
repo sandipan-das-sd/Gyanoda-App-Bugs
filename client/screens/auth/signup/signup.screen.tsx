@@ -48,6 +48,8 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function SignUpScreen() {
   const [isPasswordVisible, setPasswordVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFacebookLoading, setIsFacebookLoading] = useState(false);
   const [buttonSpinner, setButtonSpinner] = useState(false);
   const [userInfo, setUserInfo] = useState({
     name: "",
@@ -95,11 +97,31 @@ export default function SignUpScreen() {
     return subscriber;
   }, []);
 
+  // const signInWithFacebook = async () => {
+  //   setIsFacebookLoading(true);
+  //   try {
+  //     await LoginManager.logInWithPermissions(['public_profile', 'email']);
+  //     const data = await AccessToken.getCurrentAccessToken();
+  //     if (!data) {
+  //       return;
+  //     }
+  //     const facebookCredential = FacebookAuthProvider.credential(data.accessToken);
+  //     const auth = getAuth();
+  //     const response = await signInWithCredential(auth, facebookCredential);
+  //     console.log(response);
+  //     await sendFacebookUserDataToServer(response.user);
+  //   } catch (error) {
+  //     console.log(error);
+  //     Toast.show("Error occurred during Facebook sign-in", { type: "danger" });
+  //   }
+  // };
   const signInWithFacebook = async () => {
+    setIsFacebookLoading(true);
     try {
       await LoginManager.logInWithPermissions(['public_profile', 'email']);
       const data = await AccessToken.getCurrentAccessToken();
       if (!data) {
+        setIsFacebookLoading(false);
         return;
       }
       const facebookCredential = FacebookAuthProvider.credential(data.accessToken);
@@ -110,9 +132,10 @@ export default function SignUpScreen() {
     } catch (error) {
       console.log(error);
       Toast.show("Error occurred during Facebook sign-in", { type: "danger" });
+    } finally {
+      setIsFacebookLoading(false);
     }
   };
-
   const signOut = async () => {
     try {
       await firebase.auth().signOut();
@@ -120,13 +143,57 @@ export default function SignUpScreen() {
       console.log(error);
     }
   };
+  // const sendFacebookUserDataToServer = useCallback(async (userData:any) => {
+  //   setIsLoading(true);
+  //   try {
+  //     const dataToSend = {
+  //       email: userData.email,
+  //       name: userData.displayName,
+  //       picture: userData.photoURL,
+  //       id: userData.uid,
+  //       phone: userData.phoneNumber || '' 
+  //     };
+  //     console.log("Sending data to server:", dataToSend);
+  
+  //     const response = await axios.post(`${SERVER_URI}/facebook-signin`, dataToSend, {
+  //       timeout: 10000 // 10 seconds
+  //     });
+  //     console.log("Server response:", response.data);
+      
+  //     if (response.data.accessToken) {
+  //       await AsyncStorage.setItem("access_token", response.data.accessToken);
+  //     }
+  //     if (response.data.refreshToken) {
+  //       await AsyncStorage.setItem("refresh_token", response.data.refreshToken);
+  //     }
+  //     setIsLoading(false);
+  //     Toast.show("Facebook sign-in successful", { type: "success" });
+
+  //     router.push("/(tabs)/courses");
+  //   } catch (error) {
+  //     console.error("Error sending user data to server:", error);
+  //     if (axios.isAxiosError(error)) {
+  //       const errorMessage = error.response?.data?.message || error.message;
+  //       Toast.show(`Error: ${errorMessage}`, { type: "danger" });
+  //     } else {
+  //       Toast.show("An unexpected error occurred during Facebook sign-in", { type: "danger" });
+  //     }
+  //   }
+  // }, []);
   const sendFacebookUserDataToServer = useCallback(async (userData:any) => {
+    setIsLoading(true);
     try {
-      const response = await axios.post(`${SERVER_URI}/facebook-signin`, {
+      const dataToSend = {
         email: userData.email,
         name: userData.displayName,
         picture: userData.photoURL,
         id: userData.uid,
+        phone: userData.phoneNumber || '' 
+      };
+      console.log("Sending data to server:", dataToSend);
+  
+      const response = await axios.post(`${SERVER_URI}/facebook-signin`, dataToSend, {
+        timeout: 10000 // 10 seconds
       });
       console.log("Server response:", response.data);
       
@@ -136,15 +203,21 @@ export default function SignUpScreen() {
       if (response.data.refreshToken) {
         await AsyncStorage.setItem("refresh_token", response.data.refreshToken);
       }
-
       Toast.show("Facebook sign-in successful", { type: "success" });
-      router.push("/(tabs)");
+
+      router.push("/(tabs)/courses");
     } catch (error) {
       console.error("Error sending user data to server:", error);
-      Toast.show("Error occurred during Facebook sign-in", { type: "danger" });
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message || error.message;
+        Toast.show(`Error: ${errorMessage}`, { type: "danger" });
+      } else {
+        Toast.show("An unexpected error occurred during Facebook sign-in", { type: "danger" });
+      }
+    } finally {
+      setIsLoading(false);
     }
   }, []);
-
   const handlePasswordValidation = useCallback((value: string) => {
     const password = value;
     const passwordSpecialCharacter = /(?=.*[!@#$&*])/;
@@ -551,8 +624,13 @@ export default function SignUpScreen() {
           <TouchableOpacity onPress={() => promptAsync()}>
             <FontAwesome name="google" size={30} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={signInWithFacebook}>
-            <FontAwesome name="facebook" size={30} />
+          <TouchableOpacity onPress={signInWithFacebook} disabled={isFacebookLoading}>
+          {isFacebookLoading ? (
+              <ActivityIndicator size="small" color="#4267B2" />
+            ) : (
+              <FontAwesome name="facebook" size={30} />
+            )}
+           
           </TouchableOpacity>
         </View>
 
