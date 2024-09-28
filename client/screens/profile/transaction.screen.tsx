@@ -78,163 +78,192 @@ export default function InvoiceGeneratorScreen() {
   const generateInvoiceHtml = (transaction: Transaction) => {
     const invoiceDate = new Date(transaction.createdAt).toLocaleDateString();
     const companyName = "Gyanoda";
-    const companyAddress = "218, Basudevpur Road Saratpally Shyamnagar";
-    const companyPhone = "+918335019404";
-    const companyEmail = "Gyanodawbjee@gmail.com";
-    // const companyTaxId = "GYATAX1234567";
+    const companyAddress =
+      "218, Basudevpur Road Saratpally Shyamnagar Pin:-743127 West Bengal, India";
+    const companyPhone = "+919073963347";
+    const companyEmail = "support@gyanoda.com";
+    const companyLogoUrl = "https://res.cloudinary.com/dv9h1noz9/image/upload/v1725727334/pamg8mftyshstqe1whay.png"; // Assuming your logo is hosted here
+    const watermarkImageUrl = "https://res.cloudinary.com/dv9h1noz9/image/upload/v1727549021/vecteezy_confirmation-and-approval-of-order-operation-payment_35202185_j6btqt.jpg"; // Placeholder for the success watermark
+  
 
     return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Invoice for ${transaction.courseName}</title>
-        <style>
-          body {
-            font-family: 'Helvetica', 'Arial', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f4f4f4;
-          }
-          .invoice-container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 30px;
-            background-color: #fff;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-          }
-          .invoice-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #3498db;
-          }
-          .invoice-title {
-            font-size: 28px;
-            font-weight: bold;
-            color: #3498db;
-          }
-          .company-logo {
-            font-size: 32px;
-            font-weight: bold;
-            color: #3498db;
-          }
-          .company-details, .customer-details {
-            margin-top: 20px;
-          }
-          .section-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #3498db;
-            margin-bottom: 10px;
-          }
-          .invoice-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-          }
-          .invoice-table th, .invoice-table td {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-          }
-          .invoice-table th {
-            background-color: #3498db;
-            color: #fff;
-          }
-          .total-row {
-            font-weight: bold;
-            background-color: #f2f2f2;
-          }
-          .status-completed {
-            color: #27ae60;
-            font-weight: bold;
-          }
-          .status-pending {
-            color: #f39c12;
-            font-weight: bold;
-          }
-          .additional-info {
-            margin-top: 30px;
-            background-color: #ecf0f1;
-            padding: 15px;
-            border-radius: 5px;
-          }
-          .footer {
-            margin-top: 30px;
-            text-align: center;
-            color: #7f8c8d;
-            font-size: 14px;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="invoice-container">
-          <div class="invoice-header">
-            <div class="company-logo">Gyanoda</div>
-            <div class="invoice-title">Invoice</div>
-          </div>
-          
-          <div class="company-details">
-            <div class="section-title">From:</div>
-            <div>${companyName}</div>
-            <div>${companyAddress}</div>
-            <div>Phone: ${companyPhone}</div>
-            <div>Email: ${companyEmail}</div>
-            
-          </div>
-          
-          <div class="customer-details">
-            <div class="section-title">To:</div>
-            <div>${user?.name || "Valued Customer"}</div>
-            <div>Email: ${user?.email || "N/A"}</div>
-            <div>Order ID: ${transaction.orderId}</div>
-            <div>Payment ID: ${transaction.paymentId}</div>
-          </div>
-          
-          <table class="invoice-table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Description</th>
-                <th>Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>${transaction.courseName}</td>
-                <td>${transaction.courseDescription}</td>
-                <td>₹${transaction.amount.toFixed(2)}</td>
-              </tr>
-              <tr class="total-row">
-                <td colspan="2">Total</td>
-                <td>₹${transaction.amount.toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
-          
-          <div class="additional-info">
-            <div class="section-title">Additional Information:</div>
-            <div>Date: ${invoiceDate}</div>
-            <div>Status: <span class="${
-              transaction.status === "Completed"
-                ? "status-completed"
-                : "status-pending"
-            }">${transaction.status}</span></div>
-            <div>Payment Method: Online Payment</div>
-            <div>Course Level: ${transaction.level}</div>
-            <div>Tags: ${transaction.tags}</div>
-          </div>
-          
-          <div class="footer">
-            Thank you for choosing Gyanoda for your learning journey!
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Invoice for ${transaction.courseName}</title>
+      <style>
+       body {
+      font-family: 'Helvetica', 'Arial', sans-serif;
+      color: #333;
+      background-color: #f4f4f4;
+      padding: 20px;
+    }
+    .invoice-container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 30px;
+      background-color: #fff;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      position: relative;
+      page-break-inside: avoid; /* Prevent page break within the container */
+    }
+    .invoice-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #3498db;
+    }
+    .invoice-title {
+      font-size: 28px;
+      font-weight: bold;
+      color: #3498db;
+    }
+    .company-logo {
+      width: 120px;
+    }
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0.1;
+      z-index: -1;
+      width: 70%;
+      height: auto;
+    }
+    .company-details, .customer-details {
+      margin-top: 20px;
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #3498db;
+      margin-bottom: 10px;
+    }
+    .invoice-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      page-break-inside: avoid; /* Prevent page break within the table */
+    }
+    .invoice-table th, .invoice-table td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+    .invoice-table th {
+      background-color: #3498db;
+      color: #fff;
+    }
+    .total-row {
+      font-weight: bold;
+      background-color: #f2f2f2;
+    }
+    .status-completed {
+      color: #27ae60;
+      font-weight: bold;
+    }
+    .status-pending {
+      color: #f39c12;
+      font-weight: bold;
+    }
+    .additional-info {
+      margin-top: 30px;
+      background-color: #ecf0f1;
+      padding: 15px;
+      border-radius: 5px;
+      page-break-inside: avoid; /* Prevent page break within additional info */
+    }
+    .footer {
+      margin-top: 30px;
+      text-align: center;
+      color: #7f8c8d;
+      font-size: 14px;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .invoice-container {
+        page-break-inside: avoid; /* Ensure invoice does not break across pages */
+      }
+      .invoice-table, .additional-info {
+        page-break-inside: avoid;
+      }
+    }
+      </style>
+    </head>
+    <body>
+  <div class="invoice-container">
+    <img src="${watermarkImageUrl}" alt="Success Watermark" class="watermark" />
+    
+    <div class="invoice-header">
+      <img src="${companyLogoUrl}" alt="Company Logo" class="company-logo" />
+      <div class="invoice-title">Invoice</div>
+    </div>
+
+    <div class="company-details">
+      <div class="section-title">From:</div>
+      <div>${companyName}</div>
+      <div>${companyAddress}</div>
+      <div>Phone: ${companyPhone}</div>
+      <div>Email: ${companyEmail}</div>
+    </div>
+
+    <div class="customer-details">
+      <div class="section-title">To:</div>
+      <div>${user?.name || "Valued Customer"}</div>
+      <div>Email: ${user?.email || "N/A"}</div>
+      <div>Order ID: ${transaction.orderId}</div>
+      <div>Payment ID: ${transaction.paymentId}</div>
+    </div>
+
+    <table class="invoice-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Description</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>${transaction.courseName}</td>
+          <td>${transaction.courseDescription}</td>
+          <td>₹${transaction.amount.toFixed(2)}</td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="2">Total</td>
+          <td>₹${transaction.amount.toFixed(2)}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="additional-info">
+      <div class="section-title">Additional Information:</div>
+      <div>Date: ${invoiceDate}</div>
+      <div>Status: <span class="${
+        transaction.status === "Completed"
+          ? "status-completed"
+          : "status-pending"
+      }">${transaction.status}</span></div>
+      <div>Payment Method: Online Payment</div>
+      <div>Course Level: ${transaction.level}</div>
+      <div>Tags: ${transaction.tags}</div>
+    </div>
+
+    <div class="footer">
+      Thank you for choosing Gyanoda for your learning journey!
+    </div>
+  </div>
+</body>
+    </html>
+  `;
   };
 
   const handleDownloadInvoice = async (transaction: Transaction) => {
@@ -422,4 +451,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
+
+  
 });
