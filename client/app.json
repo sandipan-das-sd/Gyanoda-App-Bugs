@@ -37,7 +37,8 @@
           "apiKey": "AIzaSyDrIlKE-OzCydDLFrnffUK3Lazd3A3n7vg"
         }
       },
-      "package": "com.study_bloom.gyanoda"
+      "package": "com.study_bloom.gyanoda",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -49,6 +50,12 @@
       ["expo-facebook", {
         "appID": "1184840985908097"
       }],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps._some_id_here_"
+        }
+      ],
       [
         "react-native-fbsdk-next",
         {

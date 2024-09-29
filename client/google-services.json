@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "373284502153",
+    "project_id": "gyanoda-facebook-login",
+    "storage_bucket": "gyanoda-facebook-login.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:373284502153:android:c6906fa8334293ed0aa458",
+        "android_client_info": {
+          "package_name": "com.study_bloom.gyanoda"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDc6ttzCPrXSnNA-xvsMywOoZiI10VMdmE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
