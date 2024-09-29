@@ -46,6 +46,9 @@
     },
     "plugins": [
       "expo-router",
+      ["expo-facebook", {
+        "appID": "1184840985908097"
+      }],
       [
         "react-native-fbsdk-next",
         {

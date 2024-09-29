@@ -1898,6 +1898,11 @@ const CourseAccess: React.FC = () => {
     }
   }, [searchTerm]);
 
+  const handleSearchButtonClick = useCallback(() => {
+    setIsSearchButtonClicked(true);
+    handleSearch(searchTerm);
+  }, [handleSearch, searchTerm]);
+
   const fetchCourses = useCallback(async () => {
     if (user?._id) {
       setLoading(true);
@@ -2810,7 +2815,7 @@ const CourseAccess: React.FC = () => {
   }, [questions]);
   return (
     <ScrollView style={styles.container}>
-         <View style={styles.searchContainer}>
+         {/* <View style={styles.searchContainer}>
             <TextInput
               style={styles.searchInput}
               placeholder="Search Questions  by Chapters...."
@@ -2828,7 +2833,26 @@ const CourseAccess: React.FC = () => {
                 <Text style={styles.searchButtonText}>Search</Text>
               )}
             </TouchableOpacity>
-          </View>
+          </View> */}
+           <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search Questions by Chapters...."
+          value={searchTerm}
+          onChangeText={setSearchTerm}
+        />
+        <TouchableOpacity
+          style={[styles.searchButton, isSearchButtonClicked && styles.searchButtonClicked]}
+          onPress={handleSearchButtonClick}
+          disabled={isSearching}
+        >
+          {isSearching ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.searchButtonText}>Search</Text>
+          )}
+        </TouchableOpacity>
+      </View>
       <Text style={styles.header}>Select Your Exam</Text>
       {loading || ghostLoading ? (
         <View style={styles.ghostLoader}>
@@ -3455,6 +3479,11 @@ const styles = StyleSheet.create({
     color: '#007bff',
     marginRight: 5,
   },
+ 
+  searchButtonClicked: {
+    backgroundColor: '#0056b3', // A darker shade when clicked
+  },
+ 
 });
 
 export default CourseAccess;
