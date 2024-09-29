@@ -111,6 +111,7 @@ const CourseCard: React.FC<CourseCardProps> = memo(
       return <SkeletonLoader />;
     }
    
+    0.
 
     return (
       <TouchableOpacity

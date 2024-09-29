@@ -42,7 +42,16 @@ export default function useUser() {
       setLoading(false);
     }
   }, []);
-
+  const logout = useCallback(async () => {
+    try {
+      await axios.get(`${SERVER_URI}/logout`, {
+        withCredentials: true,
+      });
+      setUser(null);
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  }, []);
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
@@ -51,5 +60,5 @@ export default function useUser() {
     fetchUser();
   }, [fetchUser]);
 
-  return { loading, user, error, refetch };
+  return { loading, user, error, refetch,logout  };
 }
