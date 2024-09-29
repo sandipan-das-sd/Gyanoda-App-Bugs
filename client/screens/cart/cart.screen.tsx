@@ -267,7 +267,10 @@ export default function CartScreen() {
         await AsyncStorage.removeItem("cart");
         setCartItems([]);
         setOrderSuccess(true);
-        Alert.alert("Success", "Your order has been placed successfully!");
+        Alert.alert("Success", "Your course has been purchased successfully!");
+        setTimeout(() => {
+          router.replace("/(tabs)/courses");
+        }, 3000);
       } else {
         console.error("Payment verification failed:", response.data);
         Alert.alert("Error", "Payment verification failed. Please try again.");
@@ -312,6 +315,7 @@ export default function CartScreen() {
                   resizeMode: "contain",
                   marginBottom: 20,
                 }}
+               
               />
               <View style={{ alignItems: "center", marginBottom: 20 }}>
                 <Text style={{ fontSize: 22, fontFamily: "Raleway_700Bold" }}>
