@@ -28,14 +28,16 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { router } from "expo-router";
+
 
 import Loader from "@/components/loader/loader";
 import useUser from "@/hooks/auth/useUser";
 import { SERVER_URI } from "@/utils/uri";
-
+import { router, useNavigation,useRouter } from "expo-router";
 export default function ProfileScreen() {
-  const { user, loading, refetch } = useUser();
+  const { user, loading, refetch,logout } = useUser();
+  const navigation = useNavigation();
+  const routerInstance = useRouter();
   const [image, setImage] = useState<string | null>(null);
   const [loader, setLoader] = useState(false);
   const [imageUpdateCounter, setImageUpdateCounter] = useState(0);
@@ -125,15 +127,41 @@ export default function ProfileScreen() {
         {
           text: "Logout",
           onPress: async () => {
-            await AsyncStorage.removeItem("access_token");
-            await AsyncStorage.removeItem("refresh_token");
-            router.push("/(routes)/login");
+            try {
+              await AsyncStorage.removeItem("access_token");
+              await AsyncStorage.removeItem("refresh_token");
+              
+              // Call the logout function from useUser hook
+              await logout();
+
+              // Reset navigation state and redirect to login
+              // navigation.reset({
+              //   index: 0,
+              //   routes: [{ name: "(routes)/login" }],
+              // });
+              routerInstance.replace("/(routes)/login");
+            } catch (error) {
+              console.error("Logout error:", error);
+              Alert.alert("Error", "Failed to logout. Please try again.");
+            }
           },
         },
       ],
       { cancelable: false }
     );
-  }, []);
+  }, [logout, navigation]);
+
+  // Prevent going back after logout
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      if (!user) {
+        // Prevent default behavior of going back
+        e.preventDefault();
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, user]);
 
   const pickImage = useCallback(async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
