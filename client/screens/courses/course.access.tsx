@@ -1347,6 +1347,7 @@ import { SERVER_URI } from "@/utils/uri";
 import CustomVideoPlayer from "@/CustomVideoPlayer/CustomVideoPlayer";
 import { Toast } from "react-native-toast-notifications";
 import { AntDesign } from "@expo/vector-icons";
+import { debounce } from 'lodash';
 import axios from "axios";
 import useUser from "@/hooks/auth/useUser";
 import { checkAndCleanCache } from "@/utils/cacheManagement";
@@ -1603,7 +1604,10 @@ const CourseAccess: React.FC = () => {
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchTag, setSearchTag] = useState("");
-
+  const [isLoadingYears, setIsLoadingYears] = useState(false);
+  const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
+  const [isSearchButtonClicked, setIsSearchButtonClicked] = useState(false);
+  const [lastSearchTerm, setLastSearchTerm] = useState("");
   const [likedQuestions, setLikedQuestions] = useState<Record<string, boolean>>(
     {}
   );
@@ -1642,6 +1646,19 @@ const CourseAccess: React.FC = () => {
       clearTimeout(timer);
     };
   }, []);
+   // Debounced search function
+   const debouncedSearch = useCallback(
+    debounce((term: string) => {
+      handleSearch(term);
+    }, 300),
+    [selectedCourse, selectedYear, selectedSubject]
+  );
+
+  useEffect(() => {
+    if (searchTerm) {
+      debouncedSearch(searchTerm);
+    }
+  }, [searchTerm, debouncedSearch]);
   const handleDoubtSubmit = async (
     selectedQuestions: string[],
     timeSlot: string
@@ -1780,12 +1797,54 @@ const CourseAccess: React.FC = () => {
   //     setIsSearching(false);
   //   }
   // }, [selectedCourse, searchTerm]);
-  const handleSearch = useCallback(async () => {
+  // const handleSearch = useCallback(async () => {
+  //   if (!selectedCourse) {
+  //     Alert.alert("Error", "Please select a course before searching.");
+  //     return;
+  //   }
+
+  //   setIsSearching(true);
+  //   try {
+  //     const accessToken = await AsyncStorage.getItem("access_token");
+  //     const refreshToken = await AsyncStorage.getItem("refresh_token");
+  //     const response = await axios.get(
+  //       `${SERVER_URI}/course/${selectedCourse}/filter-questions`,
+  //       {
+  //         params: { searchTerm, year: selectedYear, subject: selectedSubject },
+  //         headers: {
+  //           "access-token": accessToken,
+  //           "refresh-token": refreshToken,
+  //         },
+  //       }
+  //     );
+
+  //     const data = response.data;
+  //     if (data.success) {
+  //       const questionsWithMetadata = data.questions.map((q: Question) => ({
+  //         ...q,
+  //         year: q.year || selectedYear,
+  //         subject: q.subject || selectedSubject,
+  //       }));
+  //       setFilteredQuestions(questionsWithMetadata);
+  //       await loadLikeState(questionsWithMetadata);
+  //       setSearchTag(searchTerm);
+  //     } else {
+  //       Alert.alert("Error", "Failed to fetch filtered questions.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error searching questions:", error);
+  //     Alert.alert("Error", "Error searching questions.");
+  //   } finally {
+  //     setIsSearching(false);
+  //   }
+  // }, [selectedCourse, searchTerm, selectedYear, selectedSubject]);
+  const handleSearch = useCallback(async (term: string) => {
     if (!selectedCourse) {
       Alert.alert("Error", "Please select a course before searching.");
+      setIsSearchButtonClicked(false);
       return;
     }
-
+  
     setIsSearching(true);
     try {
       const accessToken = await AsyncStorage.getItem("access_token");
@@ -1793,14 +1852,15 @@ const CourseAccess: React.FC = () => {
       const response = await axios.get(
         `${SERVER_URI}/course/${selectedCourse}/filter-questions`,
         {
-          params: { searchTerm, year: selectedYear, subject: selectedSubject },
+          // Add here: Include year and subject in the params
+          params: { searchTerm: term, year: selectedYear, subject: selectedSubject },
           headers: {
             "access-token": accessToken,
             "refresh-token": refreshToken,
           },
         }
       );
-
+  
       const data = response.data;
       if (data.success) {
         const questionsWithMetadata = data.questions.map((q: Question) => ({
@@ -1810,7 +1870,9 @@ const CourseAccess: React.FC = () => {
         }));
         setFilteredQuestions(questionsWithMetadata);
         await loadLikeState(questionsWithMetadata);
-        setSearchTag(searchTerm);
+        setSearchTag(term);
+        // Add here: Update lastSearchTerm
+        setLastSearchTerm(term);
       } else {
         Alert.alert("Error", "Failed to fetch filtered questions.");
       }
@@ -1819,8 +1881,9 @@ const CourseAccess: React.FC = () => {
       Alert.alert("Error", "Error searching questions.");
     } finally {
       setIsSearching(false);
+      setIsSearchButtonClicked(false);
     }
-  }, [selectedCourse, searchTerm, selectedYear, selectedSubject]);
+  }, [selectedCourse, selectedYear, selectedSubject]);
 
 
   // const handleRemoveSearchTag = () => {
@@ -2747,7 +2810,26 @@ const CourseAccess: React.FC = () => {
   }, [questions]);
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.header}>Select Your Course</Text>
+         <View style={styles.searchContainer}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search Questions  by Chapters...."
+              value={searchTerm}
+              onChangeText={setSearchTerm}
+            />
+            <TouchableOpacity
+              style={styles.searchButton}
+              onPress={handleSearch}
+              disabled={isSearching}
+            >
+              {isSearching ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.searchButtonText}>Search</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+      <Text style={styles.header}>Select Your Exam</Text>
       {loading || ghostLoading ? (
         <View style={styles.ghostLoader}>
           <ActivityIndicator size="large" color="#007bff" />
@@ -2817,10 +2899,10 @@ const CourseAccess: React.FC = () => {
             </Picker>
 
 
-            <View style={styles.searchContainer}>
+            {/* <View style={styles.searchContainer}>
             <TextInput
               style={styles.searchInput}
-              placeholder="Search by tags..."
+              placeholder="Search Questions  by Chapters...."
               value={searchTerm}
               onChangeText={setSearchTerm}
             />
@@ -2835,7 +2917,7 @@ const CourseAccess: React.FC = () => {
                 <Text style={styles.searchButtonText}>Search</Text>
               )}
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           
           {searchTag && (

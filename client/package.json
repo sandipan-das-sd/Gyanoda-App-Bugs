@@ -89,6 +89,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@types/lodash": "^4.17.9",
     "@types/react-native": "^0.72.8",
     "@types/react-native-razorpay": "^2.2.5",
     "@types/uuid": "^10.0.0",

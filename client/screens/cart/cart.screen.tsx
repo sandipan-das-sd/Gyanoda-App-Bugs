@@ -270,7 +270,7 @@ export default function CartScreen() {
         Alert.alert("Success", "Your course has been purchased successfully!");
         setTimeout(() => {
           router.replace("/(tabs)/courses");
-        }, 3000);
+        }, 1000);
       } else {
         console.error("Payment verification failed:", response.data);
         Alert.alert("Error", "Payment verification failed. Please try again.");

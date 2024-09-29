@@ -14,6 +14,7 @@ import SkeletonLoader from "@/utils/skeleton.loader";
 import useUser from "@/hooks/auth/useUser";
 import axios from "axios";
 import { SERVER_URI } from "@/utils/uri";
+
 interface CoursesType {
   _id: string;
   thumbnail: { url: string };
@@ -28,20 +29,14 @@ interface CoursesType {
 interface CourseCardProps {
   item: CoursesType;
   isLoading: boolean;
-  isPurchased: boolean;
 }
 
 const LoadingIndicator = () => {
   const [rotation] = useState(new Animated.Value(0));
- 
+
   const [messageIndex, setMessageIndex] = useState(0);
- 
-  const messages = [
-    "Loading...",
-    "This may take some time...",
-    "Congrats! It's done!",
-  ];
-  
+
+  const messages = ["Loading..."];
 
   useEffect(() => {
     Animated.loop(
@@ -76,19 +71,25 @@ const LoadingIndicator = () => {
   );
 };
 
-// CourseCard Component
 const CourseCard: React.FC<CourseCardProps> = memo(
   ({ item, isLoading: initialLoading }) => {
     const [isClicked, setIsClicked] = useState(false);
     const [isPurchased, setIsPurchased] = useState(false);
-    const {user,loading}=useUser();
+    const { user } = useUser();
+
     useEffect(() => {
       const checkPurchaseStatus = async () => {
         if (user && user._id) {
           try {
-            const response = await axios.get(`${SERVER_URI}/get-all-courses/${user._id}`);
+            const response = await axios.get(
+              `${SERVER_URI}/get-all-courses/${user._id}`
+            );
             const purchasedCourses = response.data.courses;
-            setIsPurchased(purchasedCourses.some((course: CoursesType) => course._id === item._id));
+            setIsPurchased(
+              purchasedCourses.some(
+                (course: CoursesType) => course._id === item._id
+              )
+            );
           } catch (error) {
             console.error("Error fetching purchase status:", error);
           }
@@ -100,18 +101,19 @@ const CourseCard: React.FC<CourseCardProps> = memo(
 
     const handlePress = useCallback(() => {
       setIsClicked(true);
-      const itemString = JSON.stringify(item);
-      router.push({
-        pathname: "/(routes)/course-details",
-        params: { item: itemString },
-      });
+      setTimeout(() => {
+        const itemString = JSON.stringify(item);
+        router.push({
+          pathname: "/(routes)/course-details",
+          params: { item: itemString },
+        });
+        setIsClicked(false);
+      }, 1500);
     }, [item]);
 
     if (initialLoading) {
       return <SkeletonLoader />;
     }
-   
-    0.
 
     return (
       <TouchableOpacity
@@ -139,26 +141,11 @@ const CourseCard: React.FC<CourseCardProps> = memo(
             <Text style={styles.studentsText}>{item.purchased} Students</Text>
           </View>
           <View style={styles.priceContainer}>
-          {/* <View style={styles.priceWrapper}>
-              {isPurchased ? (
-                <>
-                <Text style={styles.purchasedText}>Purchased</Text>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.currentPrice}>₹{item.price}</Text>
-                  <Text style={styles.originalPrice}>
-                    ₹{item.estimatedPrice}
-                  </Text>
-                </>
-              )}
-            </View> */}
             <View style={styles.priceWrapper}>
               {isPurchased ? (
                 <Text style={styles.purchasedText}>Purchased</Text>
               ) : (
                 <>
-                  <Text style={styles.notPurchasedText}>Not Purchased</Text>
                   <View style={styles.priceInfo}>
                     <Text style={styles.currentPrice}>₹{item.price}</Text>
                     <Text style={styles.originalPrice}>
@@ -202,7 +189,7 @@ const styles = StyleSheet.create({
   },
   thumbnail: {
     width: wp(86),
-    height: 180,
+    height: wp(86) * (9 / 16),
     borderRadius: 8,
     alignSelf: "center",
     resizeMode: "cover",
@@ -248,10 +235,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  // priceWrapper: {
-  //   flexDirection: "row",
-  //   alignItems: "baseline",
-  // },
+  priceWrapper: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
   currentPrice: {
     fontSize: 18,
     fontWeight: "600",
@@ -265,12 +252,6 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     color: "#888",
     fontFamily: "Nunito_400Regular",
-  },
-  purchasedText: {
-    fontSize: 18,
-    fontWeight: "600",
-    fontFamily: "Nunito_700Bold",
-    color: "#4CAF50",
   },
   lectureInfo: {
     flexDirection: "row",
@@ -288,20 +269,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  notPurchasedText: {
-    fontSize: 14,
+  purchasedText: {
+    fontSize: 18,
     fontWeight: "600",
     fontFamily: "Nunito_700Bold",
-    color: "#FF6347",
-    marginBottom: 2,
+    color: "#4CAF50",
   },
   priceInfo: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  priceWrapper: {
-    flexDirection: "column",
-    alignItems: "flex-start",
+    flexDirection: "row",
+    alignItems: "baseline",
   },
 });
 
@@ -318,9 +294,7 @@ const loaderStyles = StyleSheet.create({
     fontWeight: "600",
     fontFamily: "Nunito_600SemiBold",
     color: "#FFFFFF",
-    textAlign: "center",
   },
-
 });
 
 export default CourseCard;

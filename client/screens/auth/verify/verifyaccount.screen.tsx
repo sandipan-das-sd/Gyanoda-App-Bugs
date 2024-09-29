@@ -19,6 +19,7 @@ export default function VerifyAccountScreen() {
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const inputs = useRef<React.RefObject<TextInput>[]>(
     [...Array(4)].map(() => React.createRef<TextInput>())
   );
@@ -76,6 +77,8 @@ export default function VerifyAccountScreen() {
   };
 
   const handleResendCode = async () => {
+    if (!canResend || isResending) return;
+    setIsResending(true);
     try {
       const userInfoString = await AsyncStorage.getItem("user_info");
       if (!userInfoString) {
@@ -84,6 +87,7 @@ export default function VerifyAccountScreen() {
           placement: "top",
           duration: 5000,
         });
+        setIsResending(false);
         return;
       }
 
@@ -100,7 +104,7 @@ export default function VerifyAccountScreen() {
       await AsyncStorage.setItem("activation_token", res.data.activationToken);
 
       Toast.show(
-        "New verification code sent! Please check your Email and Mobile SMS.",
+        "New verification code sent successfully. Please check your email and mobile SMS.",
         {
           type: "success",
           placement: "top",
@@ -118,6 +122,8 @@ export default function VerifyAccountScreen() {
         placement: "top",
         duration: 5000,
       });
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -160,16 +166,20 @@ export default function VerifyAccountScreen() {
       <TouchableOpacity
         style={[styles.resendButton, !canResend && styles.resendButtonDisabled]}
         onPress={handleResendCode}
-        disabled={!canResend}
+        disabled={!canResend || isResending}
       >
-        <Text
-          style={[
-            styles.resendButtonText,
-            !canResend && styles.resendButtonTextDisabled,
-          ]}
-        >
-          Resend Code
-        </Text>
+        {isResending ? (
+          <ActivityIndicator size="small" color="#3876EE" />
+        ) : (
+          <Text
+            style={[
+              styles.resendButtonText,
+              !canResend && styles.resendButtonTextDisabled,
+            ]}
+          >
+            Resend Code
+          </Text>
+        )}
       </TouchableOpacity>
       <View style={styles.loginLink}>
         <Text style={[styles.backText, { fontFamily: "Nunito_700Bold" }]}>
@@ -184,7 +194,6 @@ export default function VerifyAccountScreen() {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
