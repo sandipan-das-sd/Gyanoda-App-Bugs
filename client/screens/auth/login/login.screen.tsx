@@ -48,7 +48,7 @@ export default function LoginScreen() {
     email: "",
     password: "",
   });
-  const [userDetals, setUserDetails] = useState(null);
+  
   const [required, setRequired] = useState("");
   const [error, setError] = useState({ password: "" });
   const [rememberMe, setRememberMe] = useState(false);
@@ -153,68 +153,7 @@ export default function LoginScreen() {
     }
   };
 
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    webClientId:
-      "1035545013004-p0tlf28nbm8847ivn29dr1r6cio30r7n.apps.googleusercontent.com",
-    androidClientId:
-      "1035545013004-etpoa0p6t8be3uflcolq1g7jjd84fuo4.apps.googleusercontent.com",
-    iosClientId:
-      "1035545013004-m8vqnen4o8ts8b3tnevke5bhkesclm9l.apps.googleusercontent.com",
-  });
 
-  // Handle Google sign-in
-  useEffect(() => {
-    const handleSigninGoogle = async () => {
-      if (response?.type === "success") {
-        const accessToken = response.authentication?.accessToken;
-        if (accessToken) {
-          await getUserInfo(accessToken);
-          router.push("/(tabs)");
-          Toast.show("Welcome Home", { type: "success" });
-        }
-        
-      } 
-    };
-
-    handleSigninGoogle();
-  }, [response]);
-
-  const getUserInfo = async (token: string) => {
-    if (!token) return;
-    const url = "https://www.googleapis.com/userinfo/v2/me";
-    try {
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const user = await response.json();
-      await AsyncStorage.setItem("@user", JSON.stringify(user));
-      setUserDetails(user);
-      await sendUserDataToServer(user);
-    } catch (error) {
-      console.error("Error fetching user info:", error);
-    }
-  };
-
-  const sendUserDataToServer = async (userData: any) => {
-    try {
-      const response = await axios.post(`${SERVER_URI}/google-signin`, userData);
-      console.log("Server response:", response.data);
-      
-      // Save the access token and refresh token from your server
-      if (response.data.accessToken) {
-        await AsyncStorage.setItem("access_token", response.data.accessToken);
-      }
-      if (response.data.refreshToken) {
-        await AsyncStorage.setItem("refresh_token", response.data.refreshToken);
-      }
-
-      // Handle any additional logic based on server response
-      Toast.show("Google sign-in successful", { type: "success" });
-    } catch (error) {
-      console.error("Error sending user data to server:", error);
-      Toast.show("Error occurred during Google sign-in", { type: "danger" });
-    }
-  };
 
   
   let [fontsLoaded, fontError] = useFonts({
@@ -335,7 +274,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <View style={styles.socialLoginContainer}>
-              <TouchableOpacity onPress={() => promptAsync()}>
+              <TouchableOpacity >
                 <FontAwesome name="google" size={30} />
               </TouchableOpacity>
               <TouchableOpacity>
