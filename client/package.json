@@ -23,6 +23,7 @@
     "@react-native-community/slider": "^4.5.2",
     "@react-native-firebase/app": "^21.0.0",
     "@react-native-firebase/auth": "^21.0.0",
+    "@react-native-firebase/crashlytics": "^21.0.0",
     "@react-native-google-signin/google-signin": "^13.1.0",
     "@react-native-picker/picker": "2.7.5",
     "@react-navigation/native": "^6.1.18",
