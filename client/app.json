@@ -2,7 +2,7 @@
   "expo": {
     "name": "Gyanoda",
     "slug": "gyanoda",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -47,9 +47,7 @@
     },
     "plugins": [
       "expo-router",
-      ["expo-facebook", {
-        "appID": "1184840985908097"
-      }],
+      
       [
         "@react-native-google-signin/google-signin",
         {
@@ -63,8 +61,7 @@
           "clientToken": "fde0774f1a64181a57c1c528deaf9b1a",
           "displayName": "Gyanoda"
         }
-      ],
-      "expo-facebook"
+      ]
     ],
     "experiments": {
       "typedRoutes": true

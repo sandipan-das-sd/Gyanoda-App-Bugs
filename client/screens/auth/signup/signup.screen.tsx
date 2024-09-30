@@ -44,6 +44,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAuth, FacebookAuthProvider, signInWithCredential } from 'firebase/auth';
 import { firebase } from '../../../utils/config';
 import { LoginManager, AccessToken } from 'react-native-fbsdk-next';
+import {  GooglePlacesAutocompleteRef } from 'react-native-google-places-autocomplete';
+
+import { useRef } from "react";
 WebBrowser.maybeCompleteAuthSession();
 
 export default function SignUpScreen() {
@@ -77,6 +80,8 @@ export default function SignUpScreen() {
     Nunito_700Bold,
     Nunito_600SemiBold,
   });
+  const googlePlacesRef = useRef<GooglePlacesAutocompleteRef>(null);
+
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     webClientId:
@@ -373,23 +378,30 @@ export default function SignUpScreen() {
       return;
     }
 
-    let location = await Location.getCurrentPositionAsync({});
-    const { latitude, longitude } = location.coords;
-
     try {
+      let location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
+  
       const response = await axios.get(
         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=AIzaSyDrIlKE-OzCydDLFrnffUK3Lazd3A3n7vg`
       );
-
+  
       if (response.data.results.length > 0) {
         const address = response.data.results[0].formatted_address;
         setLocationInputValue(address);
         setUserInfo((prev) => ({ ...prev, location: address }));
+        
+        // Force update of GooglePlacesAutocomplete
+        if (googlePlacesRef.current) {
+          googlePlacesRef.current.setAddressText(address);
+        }
       }
     } catch (error) {
+      console.error("Error fetching location:", error);
       Toast.show("Error fetching location", { type: "error" });
     }
   }, []);
+  
 
   const getUserInfo = useCallback(async (token: string) => {
     if (!token) return;
@@ -564,20 +576,21 @@ export default function SignUpScreen() {
         )}
         <View style={{ marginTop: 15 }}>
           <View style={styles.locationInputContainer}>
-            <GooglePlacesAutocomplete
-              placeholder="Enter your location.."
-              onPress={(data, details = null) => {
-                setUserInfo({ ...userInfo, location: data.description });
-                setLocationInputValue(data.description);
-              }}
-              query={{
-                key: "AIzaSyDrIlKE-OzCydDLFrnffUK3Lazd3A3n7vg",
-                language: "en",
-              }}
-              textInputProps={{
-                value: locationInputValue,
-                onChangeText: setLocationInputValue,
-              }}
+          <GooglePlacesAutocomplete
+  ref={googlePlacesRef}
+  placeholder="Enter your location.."
+  onPress={(data, details = null) => {
+    setUserInfo((prev) => ({ ...prev, location: data.description }));
+    setLocationInputValue(data.description);
+  }}
+  query={{
+    key: "AIzaSyDrIlKE-OzCydDLFrnffUK3Lazd3A3n7vg",
+    language: "en",
+  }}
+  textInputProps={{
+    value: locationInputValue,
+    onChangeText: setLocationInputValue,
+  }}
               styles={{
                 container: {
                   flex: 1,
