@@ -169,9 +169,7 @@ android {
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-    implementation 'com.facebook.android:facebook-login:latest.release'
-    implementation platform('com.google.firebase:firebase-bom:33.3.0')
-    implementation 'com.google.firebase:firebase-analytics'
+
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";
     def isWebpAnimatedEnabled = (findProperty('expo.webp.animated') ?: "") == "true";
@@ -202,3 +200,4 @@ if (rnVersion < versionToNumber(0, 75, 0)) {
     applyNativeModulesAppBuildGradle(project)
 }
 
+apply plugin: 'com.google.gms.google-services'
